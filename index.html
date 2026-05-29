@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CFO Dashboard — 5 Câu Hỏi BGĐ</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#07090f;
+  --s1:#0d1117;--s2:#121820;--s3:#171f2b;
+  --b1:#1c2538;--b2:#243050;
+  --tx:#dce4f0;--mu:#566070;--mu2:#7a8ea8;
+  --gr:#00c875;--gr-d:rgba(0,200,117,.12);--gr-b:rgba(0,200,117,.3);
+  --rd:#ff4757;--rd-d:rgba(255,71,87,.12);--rd-b:rgba(255,71,87,.3);
+  --or:#ffb300;--or-d:rgba(255,179,0,.12);--or-b:rgba(255,179,0,.3);
+  --bl:#4a9eff;--bl-d:rgba(74,158,255,.12);--bl-b:rgba(74,158,255,.3);
+  --pu:#a78bfa;--pu-d:rgba(167,139,250,.12);--pu-b:rgba(167,139,250,.3);
+  --cy:#22d3ee;
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--tx);min-height:100vh}
+
+/* ── HEADER ── */
+.hdr{
+  background:var(--s1);border-bottom:1px solid var(--b1);
+  padding:10px 20px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:100
+}
+.hdr-brand{display:flex;align-items:center;gap:8px;border-right:1px solid var(--b1);padding-right:14px}
+.hdr-icon{width:28px;height:28px;background:linear-gradient(135deg,#4a9eff,#22d3ee);
+  border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;color:#fff}
+.hdr-name{font-size:13px;font-weight:800;color:#fff}
+.hdr-sub{font-size:9px;color:var(--mu2)}
+.hdr-ticker{display:flex;align-items:center;gap:12px;flex:1;overflow:hidden}
+.tk{display:flex;align-items:center;gap:5px;font-size:11px}
+.tk-l{color:var(--mu)}
+.tk-v{font-weight:700;color:#fff}
+.tk-sep{color:var(--b2)}
+.hdr-r{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.badge-live{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--gr);
+  background:var(--gr-d);border:1px solid var(--gr-b);padding:3px 8px;border-radius:20px}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--gr);animation:bk 1.3s infinite}
+@keyframes bk{0%,100%{opacity:1}50%{opacity:.1}}
+.clk{font-size:10px;color:var(--mu2);background:var(--s2);border:1px solid var(--b1);
+  padding:3px 8px;border-radius:4px;font-variant-numeric:tabular-nums;min-width:66px;text-align:center}
+.upbtn{font-size:10px;font-weight:700;color:#fff;background:var(--bl);border:none;
+  padding:4px 10px;border-radius:5px;cursor:pointer;border:1px solid rgba(74,158,255,.4)}
+
+/* ── LAYOUT ── */
+.main{padding:14px 18px;display:flex;flex-direction:column;gap:12px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* ── QUESTION PANEL ── */
+.panel{
+  background:var(--s1);border:1px solid var(--b1);border-radius:12px;overflow:hidden;
+  display:flex;flex-direction:column
+}
+/* color accent top border per question */
+.q1{border-top:2px solid var(--bl)}
+.q2{border-top:2px solid var(--rd)}
+.q3{border-top:2px solid var(--or)}
+.q4{border-top:2px solid var(--gr)}
+.q5{border-top:2px solid var(--pu)}
+
+/* Panel header: question */
+.q-hdr{padding:12px 14px 0}
+.q-num{font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;margin-bottom:3px}
+.q1 .q-num{color:var(--bl)}.q2 .q-num{color:var(--rd)}.q3 .q-num{color:var(--or)}
+.q4 .q-num{color:var(--gr)}.q5 .q-num{color:var(--pu)}
+.q-text{font-size:13px;font-weight:700;color:#fff;line-height:1.3;margin-bottom:0}
+
+/* Answer box */
+.a-box{margin:10px 14px;padding:10px 12px;border-radius:8px;display:flex;align-items:center;gap:10px}
+.q1 .a-box{background:var(--bl-d);border:1px solid var(--bl-b)}
+.q2 .a-box{background:var(--rd-d);border:1px solid var(--rd-b)}
+.q3 .a-box{background:var(--or-d);border:1px solid var(--or-b)}
+.q4 .a-box{background:var(--gr-d);border:1px solid var(--gr-b)}
+.q5 .a-box{background:var(--pu-d);border:1px solid var(--pu-b)}
+.a-icon{font-size:22px;flex-shrink:0}
+.a-body{flex:1}
+.a-answer{font-size:22px;font-weight:900;line-height:1;margin-bottom:2px}
+.q1 .a-answer{color:var(--bl)}.q2 .a-answer{color:var(--rd)}.q3 .a-answer{color:var(--or)}
+.q4 .a-answer{color:var(--gr)}.q5 .a-answer{color:var(--pu)}
+.a-detail{font-size:10px;color:var(--mu2);line-height:1.4}
+
+/* Chart area */
+.p-body{padding:0 14px 14px;flex:1}
+.ch{position:relative}
+.h130{height:130px}.h150{height:150px}.h160{height:160px}.h180{height:180px}.h200{height:200px}
+
+/* ── TABLE ── */
+.tbl{width:100%;border-collapse:collapse;font-size:11px}
+.tbl th{padding:6px 8px;color:var(--mu);font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;border-bottom:1px solid var(--b1)}
+.tbl td{padding:7px 8px;border-bottom:1px solid rgba(28,37,56,.6);color:var(--mu2)}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:var(--s2)}
+.tr{text-align:right}.tc{text-align:center}
+
+/* ── TAGS ── */
+.tag{display:inline-flex;align-items:center;padding:1px 6px;border-radius:6px;font-size:9px;font-weight:700}
+.tag-r{background:var(--rd-d);color:var(--rd);border:1px solid var(--rd-b)}
+.tag-o{background:var(--or-d);color:var(--or);border:1px solid var(--or-b)}
+.tag-g{background:var(--gr-d);color:var(--gr);border:1px solid var(--gr-b)}
+.tag-b{background:var(--bl-d);color:var(--bl);border:1px solid var(--bl-b)}
+.tag-p{background:var(--pu-d);color:var(--pu);border:1px solid var(--pu-b)}
+
+/* ── DIVIDER ── */
+hr.dv{border:none;border-top:1px solid var(--b1);margin:10px 0}
+
+/* ── BANK BARS ── */
+.bk-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.bk-name{font-size:10px;color:var(--tx);width:78px;flex-shrink:0}
+.bk-bg{flex:1;background:var(--s3);border-radius:3px;height:7px;overflow:hidden}
+.bk-fill{height:100%;border-radius:3px;transition:width 1s ease}
+.bk-val{font-size:10px;font-weight:800;color:#fff;width:52px;text-align:right;flex-shrink:0}
+
+/* ── RUNWAY METER ── */
+.runway{text-align:center;margin:8px 0}
+.runway-val{font-size:42px;font-weight:900}
+.runway-lbl{font-size:11px;color:var(--mu2)}
+.runway-bar{height:8px;background:var(--s3);border-radius:4px;overflow:hidden;margin:8px 0}
+.runway-fill{height:100%;border-radius:4px}
+
+/* ── FORECAST TABLE ── */
+.fc-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--b1);font-size:11px}
+.fc-row:last-child{border-bottom:none}
+.fc-month{width:48px;flex-shrink:0;font-weight:700;color:#fff}
+.fc-bar-wrap{flex:1;position:relative;height:20px;background:var(--s3);border-radius:4px;overflow:hidden}
+.fc-bar-pos{position:absolute;left:50%;height:100%;background:rgba(0,200,117,.55);border-radius:0 4px 4px 0}
+.fc-bar-neg{position:absolute;right:50%;height:100%;background:rgba(255,71,87,.55);border-radius:4px 0 0 4px}
+.fc-zero{position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--b2)}
+.fc-val{width:56px;text-align:right;font-weight:700;flex-shrink:0}
+.fc-risk{width:28px;text-align:center;flex-shrink:0}
+
+/* ── CONVERSION METER ── */
+.conv{display:flex;gap:10px;align-items:center}
+.conv-box{flex:1;text-align:center;background:var(--s2);border-radius:8px;padding:10px 6px}
+.conv-val{font-size:20px;font-weight:900}
+.conv-lbl{font-size:9px;color:var(--mu);margin-top:2px}
+.conv-arrow{font-size:18px;color:var(--mu);flex-shrink:0}
+.conv-rate{text-align:center;flex-shrink:0}
+.conv-rate-val{font-size:26px;font-weight:900;color:var(--gr)}
+.conv-rate-lbl{font-size:9px;color:var(--mu)}
+
+/* ── RISK ZONE ── */
+.risk-zone{display:flex;justify-content:space-between;font-size:9px;color:var(--mu);margin-top:4px}
+.risk-ok{color:var(--gr)}.risk-warn{color:var(--or)}.risk-danger{color:var(--rd)}
+
+/* ── FOOTER ── */
+.footer{padding:8px;text-align:center;font-size:9px;color:var(--mu);border-top:1px solid var(--b1)}
+</style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<div class="hdr">
+  <div class="hdr-brand">
+    <div class="hdr-icon">CFO</div>
+    <div><div class="hdr-name">CFO Dashboard</div><div class="hdr-sub">5 câu hỏi · 5 câu trả lời</div></div>
+  </div>
+  <div class="hdr-ticker">
+    <div class="tk"><span class="tk-l">Tiền mặt:</span><span class="tk-v" style="color:var(--bl)">12,4 tỷ</span></div>
+    <span class="tk-sep">·</span>
+    <div class="tk"><span class="tk-l">Nợ quá hạn:</span><span class="tk-v" style="color:var(--rd)">2,18 tỷ</span></div>
+    <span class="tk-sep">·</span>
+    <div class="tk"><span class="tk-l">Vốn chôn kho:</span><span class="tk-v" style="color:var(--or)">1,8 tỷ</span></div>
+    <span class="tk-sep">·</span>
+    <div class="tk"><span class="tk-l">Cash conversion:</span><span class="tk-v" style="color:var(--gr)">76%</span></div>
+    <span class="tk-sep">·</span>
+    <div class="tk"><span class="tk-l">Runway:</span><span class="tk-v">97 ngày</span></div>
+    <span class="tk-sep">·</span>
+    <div class="tk"><span class="tk-l">Rủi ro T8:</span><span class="tk-v" style="color:var(--or)">Trung bình</span></div>
+  </div>
+  <div class="hdr-r">
+    <div class="badge-live"><div class="dot"></div>LIVE</div>
+    <div class="clk" id="clk">--:--:--</div>
+    <button class="upbtn" onclick="document.getElementById('fi').click()">↑ Upload Misa</button>
+    <input type="file" id="fi" style="display:none" accept=".xlsx,.csv">
+  </div>
+</div>
+
+<!-- ═══ MAIN ═══ -->
+<div class="main">
+
+  <!-- ROW 1: Q1 · Q2 · Q3 -->
+  <div class="row3">
+
+    <!-- ══ Q1: Công ty còn bao nhiêu tiền? ══ -->
+    <div class="panel q1">
+      <div class="q-hdr">
+        <div class="q-num">Câu hỏi 01</div>
+        <div class="q-text">Công ty còn bao nhiêu tiền?</div>
+      </div>
+      <div class="a-box">
+        <div class="a-icon">💰</div>
+        <div class="a-body">
+          <div class="a-answer">12,40 tỷ đồng</div>
+          <div class="a-detail">Đủ hoạt động <b style="color:#fff">97 ngày</b> không cần thu thêm · 4 tài khoản NH</div>
+        </div>
+      </div>
+      <div class="p-body">
+        <!-- Runway meter -->
+        <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--mu);margin-bottom:4px">
+          <span>RUNWAY</span><span style="color:#fff;font-weight:700">97 ngày · <span style="color:var(--gr)">AN TOÀN</span></span>
+        </div>
+        <div class="runway-bar">
+          <div class="runway-fill" style="width:67%;background:linear-gradient(90deg,var(--bl),var(--cy))"></div>
+        </div>
+        <div class="risk-zone">
+          <span class="risk-danger">⚠ Nguy hiểm<br>&lt;30 ngày</span>
+          <span class="risk-warn">⚡ Chú ý<br>30-60 ngày</span>
+          <span class="risk-ok">✓ An toàn<br>60-120 ngày</span>
+          <span class="risk-ok">★ Tốt<br>&gt;120 ngày</span>
+        </div>
+        <hr class="dv">
+        <!-- Bank bars -->
+        <div class="bk-row">
+          <div class="bk-name">VCB ···1234</div>
+          <div class="bk-bg"><div class="bk-fill" style="width:84%;background:linear-gradient(90deg,#1a56c4,var(--bl))"></div></div>
+          <div class="bk-val">5,20 tỷ</div>
+        </div>
+        <div class="bk-row">
+          <div class="bk-name">ACB ···5678</div>
+          <div class="bk-bg"><div class="bk-fill" style="width:61%;background:linear-gradient(90deg,#07834a,var(--gr))"></div></div>
+          <div class="bk-val">3,80 tỷ</div>
+        </div>
+        <div class="bk-row">
+          <div class="bk-name">TCB ···9012</div>
+          <div class="bk-bg"><div class="bk-fill" style="width:34%;background:linear-gradient(90deg,#a06000,var(--or))"></div></div>
+          <div class="bk-val">2,10 tỷ</div>
+        </div>
+        <div class="bk-row">
+          <div class="bk-name">BIDV ···3456</div>
+          <div class="bk-bg"><div class="bk-fill" style="width:21%;background:linear-gradient(90deg,#5b21b6,var(--pu))"></div></div>
+          <div class="bk-val">1,30 tỷ</div>
+        </div>
+        <hr class="dv">
+        <!-- 6-month cash trend -->
+        <div style="font-size:9px;color:var(--mu);margin-bottom:6px">SỐ DƯ TIỀN 6 THÁNG GẦN NHẤT</div>
+        <div class="ch h130"><canvas id="c_cash_trend"></canvas></div>
+      </div>
+    </div>
+
+    <!-- ══ Q2: Khách nào đang giữ tiền của công ty? ══ -->
+    <div class="panel q2">
+      <div class="q-hdr">
+        <div class="q-num">Câu hỏi 02</div>
+        <div class="q-text">Khách nào đang giữ tiền của công ty?</div>
+      </div>
+      <div class="a-box">
+        <div class="a-icon">🚨</div>
+        <div class="a-body">
+          <div class="a-answer">5 khách · 2,18 tỷ quá hạn</div>
+          <div class="a-detail"><b style="color:#fff">ABC Trading & XYZ Tech</b> giữ 1,47 tỷ đã &gt;45 ngày — rủi ro cao nhất</div>
+        </div>
+      </div>
+      <div class="p-body">
+        <!-- Horizontal bar chart by customer -->
+        <div style="font-size:9px;color:var(--mu);margin-bottom:8px">SỐ TIỀN QUÁ HẠN THEO TỪNG KHÁCH (triệu đồng)</div>
+        <div class="ch h150"><canvas id="c_ar_cust"></canvas></div>
+        <hr class="dv">
+        <table class="tbl">
+          <thead><tr><th>Khách hàng</th><th class="tr">Quá hạn</th><th class="tc">Ngày QH</th><th class="tc">Hành động</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><b style="color:#fff">TNHH ABC Trading</b></td>
+              <td class="tr" style="color:var(--rd);font-weight:700">850 tr</td>
+              <td class="tc"><span class="tag tag-r">67 ngày</span></td>
+              <td class="tc"><span class="tag tag-r">📞 Gọi ngay</span></td>
+            </tr>
+            <tr>
+              <td><b style="color:#fff">CTCP XYZ Tech</b></td>
+              <td class="tr" style="color:var(--rd);font-weight:700">620 tr</td>
+              <td class="tc"><span class="tag tag-r">45 ngày</span></td>
+              <td class="tc"><span class="tag tag-r">📞 Gọi ngay</span></td>
+            </tr>
+            <tr>
+              <td>CTCP DEF Phát triển</td>
+              <td class="tr" style="color:var(--or)">430 tr</td>
+              <td class="tc"><span class="tag tag-o">32 ngày</span></td>
+              <td class="tc"><span class="tag tag-o">📧 Nhắc</span></td>
+            </tr>
+            <tr>
+              <td>HTX GHI Nông nghiệp</td>
+              <td class="tr" style="color:var(--or)">280 tr</td>
+              <td class="tc"><span class="tag tag-o">28 ngày</span></td>
+              <td class="tc"><span class="tag tag-o">📧 Nhắc</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="font-size:9px;color:var(--mu);margin-top:8px;text-align:center">
+          Tổng phải thu: <b style="color:#fff">18,1 tỷ</b> · Trong hạn: <span style="color:var(--gr)">87,9%</span> · DSO: <b style="color:#fff">28 ngày</b>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ Q3: Kho nào đang chôn vốn? ══ -->
+    <div class="panel q3">
+      <div class="q-hdr">
+        <div class="q-num">Câu hỏi 03</div>
+        <div class="q-text">Kho nào đang chôn vốn?</div>
+      </div>
+      <div class="a-box">
+        <div class="a-icon">📦</div>
+        <div class="a-body">
+          <div class="a-answer">1,8 tỷ đang bị chôn</div>
+          <div class="a-detail"><b style="color:#fff">Thành phẩm dư 280%</b> tối ưu · SP-A và SP-B tồn quá lâu &gt;60 ngày</div>
+        </div>
+      </div>
+      <div class="p-body">
+        <!-- Capital tied per category -->
+        <div style="font-size:9px;color:var(--mu);margin-bottom:8px">VỐN CHÔN THEO NHÓM — % SO VỚI MỨC TỐI ƯU</div>
+        <div class="ch h150"><canvas id="c_inv_capital"></canvas></div>
+        <hr class="dv">
+        <table class="tbl">
+          <thead><tr><th>Nhóm / SKU</th><th class="tr">Vốn chôn</th><th class="tc">% tối ưu</th><th>Đề xuất</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><b style="color:#fff">Thành phẩm SP-A</b></td>
+              <td class="tr" style="color:var(--rd);font-weight:700">840 tr</td>
+              <td class="tc"><span class="tag tag-r">280%</span></td>
+              <td style="font-size:9px;color:var(--or)">Giảm giá 15%</td>
+            </tr>
+            <tr>
+              <td><b style="color:#fff">Thành phẩm SP-B</b></td>
+              <td class="tr" style="color:var(--rd);font-weight:700">570 tr</td>
+              <td class="tc"><span class="tag tag-r">317%</span></td>
+              <td style="font-size:9px;color:var(--or)">Tạm dừng nhập</td>
+            </tr>
+            <tr>
+              <td>Hàng hoá HH-05</td>
+              <td class="tr" style="color:var(--or)">390 tr</td>
+              <td class="tc"><span class="tag tag-o">145%</span></td>
+              <td style="font-size:9px;color:var(--mu2)">Theo dõi</td>
+            </tr>
+            <tr>
+              <td>Vật tư SX NL-012</td>
+              <td class="tr" style="color:var(--gr)">—</td>
+              <td class="tc"><span class="tag tag-r">9% 🔴</span></td>
+              <td style="font-size:9px;color:var(--rd);font-weight:700">Đặt mua KHẨN</td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="font-size:9px;color:var(--mu);margin-top:8px;text-align:center">
+          Tổng tồn kho: <b style="color:#fff">8,4 tỷ</b> · Vốn chôn dư thừa: <span style="color:var(--rd)">1,8 tỷ</span> · Vòng quay: <span style="color:var(--or)">45 ngày ⚠</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /row3 -->
+
+  <!-- ROW 2: Q4 · Q5 -->
+  <div class="row2">
+
+    <!-- ══ Q4: Lợi nhuận có chuyển thành tiền không? ══ -->
+    <div class="panel q4">
+      <div class="q-hdr">
+        <div class="q-num">Câu hỏi 04</div>
+        <div class="q-text">Lợi nhuận có chuyển thành tiền không?</div>
+      </div>
+      <div class="a-box">
+        <div class="a-icon">🔄</div>
+        <div class="a-body">
+          <div class="a-answer">CÓ — nhưng chỉ 76%</div>
+          <div class="a-detail">9,5 tỷ lợi nhuận → chỉ <b style="color:#fff">7,22 tỷ</b> thật sự vào tài khoản. <b style="color:#fff">2,28 tỷ</b> đang kẹt ở công nợ &amp; hàng tồn</div>
+        </div>
+      </div>
+      <div class="p-body">
+        <!-- Conversion visual -->
+        <div class="conv" style="margin-bottom:12px">
+          <div class="conv-box">
+            <div class="conv-val" style="color:var(--cy)">9,5 tỷ</div>
+            <div class="conv-lbl">Lợi nhuận kế toán<br>(Misa ghi nhận)</div>
+          </div>
+          <div style="text-align:center;flex-shrink:0;padding:0 4px">
+            <div style="font-size:20px">→</div>
+            <div style="font-size:9px;color:var(--mu)">chuyển đổi</div>
+          </div>
+          <div class="conv-box" style="border:1px solid var(--gr-b);background:var(--gr-d)">
+            <div class="conv-val" style="color:var(--gr)">7,22 tỷ</div>
+            <div class="conv-lbl" style="color:var(--gr)">Tiền thật nhận được<br>(vào tài khoản NH)</div>
+          </div>
+          <div style="text-align:center;flex-shrink:0;padding:0 8px">
+            <div style="font-size:26px;font-weight:900;color:var(--gr)">76%</div>
+            <div style="font-size:9px;color:var(--mu)">Cash conversion</div>
+          </div>
+        </div>
+
+        <!-- Where is the missing 24%? -->
+        <div style="background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:10px 12px;margin-bottom:10px">
+          <div style="font-size:9px;color:var(--mu);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">24% còn lại đang ở đâu?</div>
+          <div style="display:flex;gap:8px">
+            <div style="flex:1;text-align:center;background:var(--rd-d);border:1px solid var(--rd-b);border-radius:6px;padding:8px">
+              <div style="font-size:16px;font-weight:800;color:var(--rd)">1,47 tỷ</div>
+              <div style="font-size:9px;color:var(--mu2)">Kẹt ở công nợ<br>quá hạn</div>
+            </div>
+            <div style="flex:1;text-align:center;background:var(--or-d);border:1px solid var(--or-b);border-radius:6px;padding:8px">
+              <div style="font-size:16px;font-weight:800;color:var(--or)">0,81 tỷ</div>
+              <div style="font-size:9px;color:var(--mu2)">Kẹt ở hàng<br>tồn kho dư</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 12-month trend -->
+        <div style="font-size:9px;color:var(--mu);margin-bottom:6px">LN KẾ TOÁN vs TIỀN THẬT NHẬN — 12 THÁNG (Tỷ VNĐ)</div>
+        <div class="ch h160"><canvas id="c_conversion"></canvas></div>
+      </div>
+    </div>
+
+    <!-- ══ Q5: 90 ngày nữa có nguy cơ thiếu tiền không? ══ -->
+    <div class="panel q5">
+      <div class="q-hdr">
+        <div class="q-num">Câu hỏi 05</div>
+        <div class="q-text">90 ngày nữa có nguy cơ thiếu tiền không?</div>
+      </div>
+      <div class="a-box">
+        <div class="a-icon">🔮</div>
+        <div class="a-body">
+          <div class="a-answer">Tháng 8 — CÓ RỦI RO</div>
+          <div class="a-detail">Tháng 6-7 ổn. <b style="color:#fff">Tháng 8</b>: trả nợ NH 3,2 tỷ + cao điểm chi phí → số dư ước còn <b style="color:var(--or)">4,1 tỷ</b> (gần ngưỡng nguy hiểm)</div>
+        </div>
+      </div>
+      <div class="p-body">
+        <!-- 90-day forecast bar -->
+        <div style="font-size:9px;color:var(--mu);margin-bottom:8px">DỰ BÁO SỐ DƯ TIỀN 90 NGÀY — THEO TUẦN (Tỷ VNĐ)</div>
+        <div class="ch h160"><canvas id="c_forecast"></canvas></div>
+        <hr class="dv">
+        <!-- Monthly breakdown -->
+        <div style="font-size:9px;color:var(--mu);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">Phân tích từng tháng</div>
+
+        <!-- T6 -->
+        <div style="background:var(--gr-d);border:1px solid var(--gr-b);border-radius:7px;padding:9px 11px;margin-bottom:6px">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="font-size:11px;font-weight:700;color:var(--gr)">Tháng 6/2026 <span class="tag tag-g">✓ An toàn</span></div>
+              <div style="font-size:9px;color:var(--mu2);margin-top:2px">Thu 25 tỷ · Chi 21,5 tỷ · Trả nợ NH 1,2 tỷ</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:16px;font-weight:800;color:var(--gr)">+2,3 tỷ</div>
+              <div style="font-size:9px;color:var(--mu)">Dòng tiền ròng</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- T7 -->
+        <div style="background:var(--gr-d);border:1px solid var(--gr-b);border-radius:7px;padding:9px 11px;margin-bottom:6px">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="font-size:11px;font-weight:700;color:var(--gr)">Tháng 7/2026 <span class="tag tag-g">✓ An toàn</span></div>
+              <div style="font-size:9px;color:var(--mu2);margin-top:2px">Thu 26 tỷ · Chi 22 tỷ · Trả nợ NH 0,8 tỷ</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:16px;font-weight:800;color:var(--gr)">+3,2 tỷ</div>
+              <div style="font-size:9px;color:var(--mu)">Dòng tiền ròng</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- T8 — WARNING -->
+        <div style="background:var(--or-d);border:1px solid var(--or-b);border-radius:7px;padding:9px 11px">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="font-size:11px;font-weight:700;color:var(--or)">Tháng 8/2026 <span class="tag tag-o">⚠ Chú ý</span></div>
+              <div style="font-size:9px;color:var(--mu2);margin-top:2px">Thu 24 tỷ · Chi 24,5 tỷ · <b style="color:var(--rd)">Trả nợ NH 3,2 tỷ</b></div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:16px;font-weight:800;color:var(--rd)">-3,7 tỷ</div>
+              <div style="font-size:9px;color:var(--mu)">Dòng tiền ròng</div>
+            </div>
+          </div>
+          <div style="font-size:9px;color:var(--or);margin-top:6px;padding-top:6px;border-top:1px solid var(--or-b)">
+            💡 <b>Khuyến nghị:</b> Thu hồi công nợ ABC/XYZ (1,47 tỷ) trước T7 để đệm cho T8. Hoặc thương lượng giãn nợ NH thêm 1 tháng.
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /row2 -->
+
+</div><!-- /main -->
+<div class="footer">CFO Dashboard · 5 Câu Hỏi BGĐ · Dữ liệu mẫu — kết nối Misa API &amp; Ngân hàng để cập nhật thật · Powered by Claude AI</div>
+
+<!-- ══════════ CHARTS ══════════ -->
+<script>
+// Clock
+(function tick(){document.getElementById('clk').textContent=new Date().toLocaleTimeString('vi-VN');setTimeout(tick,1000)})();
+
+Chart.defaults.color='#566070';
+Chart.defaults.borderColor='#1c2538';
+
+// ── Q1: Cash trend 6 months ──
+new Chart(document.getElementById('c_cash_trend'),{
+  type:'line',
+  data:{
+    labels:['T12/25','T1/26','T2/26','T3/26','T4/26','T5/26'],
+    datasets:[{
+      label:'Số dư tiền',
+      data:[10.2,8.8,9.4,10.8,11.5,12.4],
+      borderColor:'#4a9eff',borderWidth:2.5,pointRadius:4,
+      pointBackgroundColor:'#4a9eff',tension:.4,
+      fill:true,backgroundColor:'rgba(74,158,255,.08)'
+    }]
+  },
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},
+      tooltip:{callbacks:{label:c=>c.raw+'tỷ'}}},
+    scales:{
+      x:{grid:{color:'#131c28'},ticks:{font:{size:9}}},
+      y:{grid:{color:'#131c28'},ticks:{callback:v=>v+'tỷ',font:{size:9}},min:7}
+    }}
+});
+
+// ── Q2: AR by customer (horizontal) ──
+new Chart(document.getElementById('c_ar_cust'),{
+  type:'bar',
+  data:{
+    labels:['ABC Trading','XYZ Tech','DEF Phát triển','GHI Nông nghiệp'],
+    datasets:[{
+      label:'Số ngày quá hạn',type:'bar',
+      data:[67,45,32,28],
+      backgroundColor:['rgba(255,71,87,.3)','rgba(255,71,87,.3)','rgba(255,179,0,.3)','rgba(255,179,0,.3)'],
+      borderColor:['#ff4757','#ff4757','#ffb300','#ffb300'],
+      borderWidth:1,borderRadius:3,yAxisID:'y',
+      order:2
+    },{
+      label:'Số tiền quá hạn (tr)',type:'bar',
+      data:[850,620,430,280],
+      backgroundColor:['rgba(255,71,87,.7)','rgba(255,71,87,.55)','rgba(255,179,0,.6)','rgba(255,179,0,.45)'],
+      borderRadius:3,yAxisID:'y2',
+      order:1
+    }]
+  },
+  options:{
+    indexAxis:'y',responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{boxWidth:9,font:{size:9},padding:8}}},
+    scales:{
+      x:{grid:{color:'#131c28'},ticks:{font:{size:9}}},
+      y:{grid:{display:false},ticks:{font:{size:9}}},
+      y2:{display:false,position:'right'}
+    }
+  }
+});
+
+// ── Q3: Inventory capital ──
+new Chart(document.getElementById('c_inv_capital'),{
+  type:'bar',
+  data:{
+    labels:['Thành phẩm A','Thành phẩm B','Hàng hoá HH-05','Nguyên liệu','Bao bì'],
+    datasets:[{
+      label:'Vốn thực tế (tr)',
+      data:[840,570,390,220,180],
+      backgroundColor:['rgba(255,71,87,.75)','rgba(255,71,87,.6)','rgba(255,179,0,.65)','rgba(0,200,117,.5)','rgba(74,158,255,.5)'],
+      borderRadius:4,barPercentage:.6
+    },{
+      label:'Mức tối ưu (tr)',
+      data:[300,180,270,800,300],
+      backgroundColor:'rgba(255,255,255,.06)',
+      borderColor:'rgba(255,255,255,.2)',
+      borderWidth:1,borderRadius:4,barPercentage:.6
+    }]
+  },
+  options:{
+    indexAxis:'y',responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{boxWidth:9,font:{size:9},padding:8}}},
+    scales:{
+      x:{grid:{color:'#131c28'},ticks:{callback:v=>v+'tr',font:{size:9}}},
+      y:{grid:{display:false},ticks:{font:{size:9}}}
+    }
+  }
+});
+
+// ── Q4: P&L vs Cash conversion ──
+const months12=['T6/25','T7/25','T8/25','T9/25','T10/25','T11/25','T12/25','T1/26','T2/26','T3/26','T4/26','T5/26'];
+new Chart(document.getElementById('c_conversion'),{
+  type:'bar',
+  data:{
+    labels:months12,
+    datasets:[{
+      label:'Lợi nhuận kế toán',
+      data:[6,7,6.5,8,7.5,8.5,9,6,7,7.5,8.5,9.5],
+      backgroundColor:'rgba(34,211,238,.4)',borderRadius:3,barPercentage:.7
+    },{
+      label:'Tiền thật nhận',
+      data:[5.0,5.8,5.2,6.8,6.0,7.2,7.8,4.5,5.6,6.2,7.0,7.22],
+      backgroundColor:'rgba(0,200,117,.65)',borderRadius:3,barPercentage:.7
+    }]
+  },
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{boxWidth:9,font:{size:9},padding:8}}},
+    scales:{
+      x:{grid:{color:'#131c28'},ticks:{font:{size:8}}},
+      y:{grid:{color:'#131c28'},ticks:{callback:v=>v+'tỷ',font:{size:9}}}
+    }}
+});
+
+// ── Q5: 90-day cash forecast by week ──
+const weeks=['T6W1','T6W2','T6W3','T6W4','T7W1','T7W2','T7W3','T7W4','T8W1','T8W2','T8W3','T8W4'];
+const forecastVals=[13.0,13.8,14.2,14.7,15.3,16.0,16.9,17.5,14.8,10.9,7.2,4.1];
+const fcColors=forecastVals.map(v=>
+  v<5 ? 'rgba(255,71,87,.8)' :
+  v<8 ? 'rgba(255,179,0,.75)' :
+  'rgba(74,158,255,.6)'
+);
+new Chart(document.getElementById('c_forecast'),{
+  type:'bar',
+  data:{
+    labels:weeks,
+    datasets:[{
+      label:'Số dư dự báo (tỷ)',
+      data:forecastVals,
+      backgroundColor:fcColors,borderRadius:4,barPercentage:.75
+    },{
+      label:'Ngưỡng nguy hiểm',type:'line',
+      data:Array(12).fill(5),
+      borderColor:'rgba(255,71,87,.6)',borderWidth:1.5,borderDash:[4,4],
+      pointRadius:0,fill:false
+    },{
+      label:'Ngưỡng an toàn',type:'line',
+      data:Array(12).fill(8),
+      borderColor:'rgba(255,179,0,.4)',borderWidth:1,borderDash:[4,4],
+      pointRadius:0,fill:false
+    }]
+  },
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{boxWidth:9,font:{size:9},padding:8}},
+      tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.raw+(typeof c.raw==='number'&&c.raw>3?'tỷ':'')}}},
+    scales:{
+      x:{grid:{color:'#131c28'},ticks:{font:{size:8}}},
+      y:{grid:{color:'#131c28'},ticks:{callback:v=>v+'tỷ',font:{size:9}},min:0,
+        afterDataLimits(scale){scale.max=Math.max(scale.max,20)}}
+    }}
+});
+</script>
+</body>
+</html>
