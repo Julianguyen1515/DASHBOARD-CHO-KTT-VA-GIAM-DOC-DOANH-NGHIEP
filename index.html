@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KTT — Finance Control Tower (Kế Toán Trưởng)</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#07090f;--s1:#0d1117;--s2:#121820;--s3:#171f2b;
+  --b1:#1c2538;--b2:#243050;
+  --tx:#dce4f0;--mu:#566070;--mu2:#7a8ea8;
+  --gr:#00c875;--grd:rgba(0,200,117,.12);--grb:rgba(0,200,117,.3);
+  --rd:#ff4757;--rdd:rgba(255,71,87,.12);--rdb:rgba(255,71,87,.3);
+  --or:#ffb300;--ord:rgba(255,179,0,.12);--orb:rgba(255,179,0,.3);
+  --bl:#4a9eff;--bld:rgba(74,158,255,.12);--blb:rgba(74,158,255,.3);
+  --pu:#a78bfa;--pud:rgba(167,139,250,.12);--pub:rgba(167,139,250,.3);
+  --cy:#22d3ee;
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--tx)}
+
+/* ── HEADER ── */
+.hdr{background:var(--s1);border-bottom:1px solid var(--b1);padding:0 18px;height:48px;
+  display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:200}
+.logo{display:flex;align-items:center;gap:8px;padding-right:12px;border-right:1px solid var(--b1);flex-shrink:0}
+.logo-ic{width:28px;height:28px;background:linear-gradient(135deg,#a78bfa,#22d3ee);border-radius:7px;
+  display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;color:#fff}
+.logo-tx{font-size:13px;font-weight:800;color:#fff}
+.logo-sub{font-size:9px;color:var(--mu2)}
+.role-badge{font-size:10px;font-weight:700;color:#fff;background:var(--gr);padding:3px 10px;border-radius:4px;flex-shrink:0}
+.hdr-link{font-size:11px;color:var(--mu2);text-decoration:none;background:var(--s2);
+  border:1px solid var(--b1);padding:3px 10px;border-radius:5px}
+.hdr-link:hover{color:var(--bl);border-color:var(--bl)}
+.hdr-r{display:flex;align-items:center;gap:8px;margin-left:auto;flex-shrink:0}
+.live{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--gr);
+  background:var(--grd);border:1px solid var(--grb);padding:3px 8px;border-radius:12px}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--gr);animation:bk 1.4s infinite}
+@keyframes bk{0%,100%{opacity:1}50%{opacity:.1}}
+.clk{font-size:10px;color:var(--mu2);background:var(--s2);border:1px solid var(--b1);
+  padding:3px 8px;border-radius:4px;min-width:64px;text-align:center}
+.upbtn{font-size:10px;font-weight:700;color:#fff;background:var(--bl);border:none;
+  padding:4px 10px;border-radius:5px;cursor:pointer}
+
+/* ── TABS ── */
+.tabs{background:var(--s1);border-bottom:1px solid var(--b1);display:flex;padding:0 18px;
+  position:sticky;top:48px;z-index:100;overflow-x:auto}
+.tab{display:flex;align-items:center;gap:5px;padding:0 14px;height:40px;font-size:11px;font-weight:600;
+  color:var(--mu);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;
+  text-transform:uppercase;letter-spacing:.4px;transition:all .2s}
+.tab:hover{color:var(--tx);background:var(--s2)}
+.tab.active{color:#fff;border-bottom-color:var(--gr)}
+.tab-num{font-size:9px;opacity:.5;font-weight:400}
+
+/* ── PAGE ── */
+.page{display:none;padding:14px 18px;animation:fi .2s ease}
+.page.active{display:block}
+@keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── GRID ── */
+.r{display:grid;gap:10px;margin-bottom:10px}
+.c6{grid-template-columns:repeat(6,1fr)}
+.c4{grid-template-columns:repeat(4,1fr)}
+.c3{grid-template-columns:repeat(3,1fr)}
+.c2{grid-template-columns:1fr 1fr}
+.c21{grid-template-columns:2fr 1fr}
+.c12{grid-template-columns:1fr 2fr}
+
+/* ── KPI ── */
+.kpi{background:var(--s1);border:1px solid var(--b1);border-radius:10px;padding:12px 14px;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.kbl::before{background:linear-gradient(90deg,#1a56c4,var(--bl))}
+.kgr::before{background:linear-gradient(90deg,#065f46,var(--gr))}
+.kor::before{background:linear-gradient(90deg,#92400e,var(--or))}
+.krd::before{background:linear-gradient(90deg,#991b1b,var(--rd))}
+.kpu::before{background:linear-gradient(90deg,#5b21b6,var(--pu))}
+.kcy::before{background:linear-gradient(90deg,#0e7490,var(--cy))}
+.kl{font-size:9px;color:var(--mu);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px}
+.kv{font-size:22px;font-weight:900;color:#fff;line-height:1;margin-bottom:3px}
+.kv-sm{font-size:17px}
+.kd{font-size:10px}.up{color:var(--gr)}.dn{color:var(--rd)}.wa{color:var(--or)}
+.kn{font-size:9px;color:var(--mu);margin-top:2px}
+.kpb{height:3px;background:var(--s3);border-radius:2px;margin-top:7px;overflow:hidden}
+.kpf{height:100%;border-radius:2px}
+
+/* ── CARD ── */
+.card{background:var(--s1);border:1px solid var(--b1);border-radius:10px;padding:13px}
+.hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.ct{font-size:10px;font-weight:700;color:var(--mu2);text-transform:uppercase;letter-spacing:.4px}
+.cb{font-size:9px;background:var(--s2);border:1px solid var(--b1);color:var(--mu);padding:2px 6px;border-radius:3px}
+.chs{position:relative}
+.h120{height:120px}.h140{height:140px}.h160{height:160px}.h180{height:180px}.h200{height:200px}
+
+/* ── SECTION LABEL ── */
+.sl{font-size:9px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.8px;
+  display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.sl::after{content:'';flex:1;height:1px;background:var(--b1)}
+
+/* ── ALERT ── */
+.al{display:flex;gap:8px;padding:8px 10px;border-radius:7px;border:1px solid;margin-bottom:6px}
+.alc{background:rgba(255,71,87,.06);border-color:rgba(255,71,87,.25)}
+.alw{background:rgba(255,179,0,.06);border-color:rgba(255,179,0,.25)}
+.ali{background:rgba(74,158,255,.06);border-color:rgba(74,158,255,.25)}
+.alg{background:rgba(0,200,117,.06);border-color:rgba(0,200,117,.25)}
+.al-ic{font-size:14px;flex-shrink:0;line-height:1.5}
+.al-bd{flex:1}
+.al-title{font-size:11px;font-weight:700;margin-bottom:2px}
+.alc .al-title{color:var(--rd)}.alw .al-title{color:var(--or)}
+.ali .al-title{color:var(--bl)}.alg .al-title{color:var(--gr)}
+.al-desc{font-size:10px;color:var(--mu2);line-height:1.5}
+.al-meta{font-size:9px;color:var(--mu);margin-top:3px}
+.al-btn{font-size:9px;font-weight:700;padding:2px 7px;border-radius:3px;border:none;cursor:pointer;margin-top:4px}
+.alc .al-btn{background:rgba(255,71,87,.15);color:var(--rd)}
+.alw .al-btn{background:rgba(255,179,0,.15);color:var(--or)}
+.ali .al-btn{background:rgba(74,158,255,.15);color:var(--bl)}
+.alg .al-btn{background:rgba(0,200,117,.15);color:var(--gr)}
+
+/* ── TABLE ── */
+.tbl{width:100%;border-collapse:collapse;font-size:11px}
+.tbl th{padding:6px 8px;color:var(--mu);font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;border-bottom:1px solid var(--b1)}
+.tbl td{padding:7px 8px;border-bottom:1px solid rgba(28,37,56,.5);color:var(--mu2)}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:var(--s2)}
+.tr{text-align:right}.tc{text-align:center}
+
+/* ── TAG ── */
+.tag{display:inline-flex;padding:1px 6px;border-radius:6px;font-size:9px;font-weight:700;align-items:center;gap:3px}
+.tg{background:var(--grd);color:var(--gr);border:1px solid var(--grb)}
+.to{background:var(--ord);color:var(--or);border:1px solid var(--orb)}
+.tr2{background:var(--rdd);color:var(--rd);border:1px solid var(--rdb)}
+.tb{background:var(--bld);color:var(--bl);border:1px solid var(--blb)}
+.tp{background:var(--pud);color:var(--pu);border:1px solid var(--pub)}
+
+/* ── CHECKLIST ── */
+.ck-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:7px;
+  border:1px solid var(--b1);margin-bottom:6px;cursor:pointer;transition:all .15s}
+.ck-item:hover{background:var(--s2)}
+.ck-item.done{background:var(--grd);border-color:var(--grb)}
+.ck-item.pending{background:var(--ord);border-color:var(--orb)}
+.ck-item.issue{background:var(--rdd);border-color:var(--rdb)}
+.ck-box{width:18px;height:18px;border-radius:4px;border:1px solid var(--b2);
+  display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
+.ck-item.done .ck-box{background:var(--gr);border-color:var(--gr);color:#000}
+.ck-item.pending .ck-box{background:var(--ord);border-color:var(--orb)}
+.ck-item.issue .ck-box{background:var(--rd);border-color:var(--rdb)}
+.ck-text{flex:1;font-size:11px;font-weight:600}
+.ck-item.done .ck-text{color:var(--gr)}.ck-item.pending .ck-text{color:var(--or)}
+.ck-item.issue .ck-text{color:var(--rd)}
+.ck-meta{font-size:9px;color:var(--mu)}
+
+/* ── PROGRESS ── */
+.pg{margin-bottom:8px}
+.pghd{display:flex;justify-content:space-between;font-size:10px;margin-bottom:4px}
+.pghd span:first-child{color:var(--tx)}.pghd span:last-child{color:var(--mu)}
+.pgbg{background:var(--s3);border-radius:3px;height:6px;overflow:hidden}
+.pgf{height:100%;border-radius:3px;transition:width 1s ease}
+
+/* ── BANK ── */
+.bk{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.bkn{font-size:10px;color:var(--tx);width:80px;flex-shrink:0}
+.bkbg{flex:1;background:var(--s3);border-radius:3px;height:6px;overflow:hidden}
+.bkf{height:100%;border-radius:3px}
+.bkv{font-size:10px;font-weight:700;color:#fff;width:50px;text-align:right;flex-shrink:0}
+
+hr.dv{border:none;border-top:1px solid var(--b1);margin:10px 0}
+
+/* ── INTERNAL CONTROL ── */
+.ic-item{display:flex;gap:10px;padding:10px;border-radius:7px;border:1px solid;margin-bottom:6px}
+.ic-sev1{background:rgba(255,71,87,.07);border-color:rgba(255,71,87,.3)}
+.ic-sev2{background:rgba(255,179,0,.07);border-color:rgba(255,179,0,.3)}
+.ic-sev3{background:rgba(74,158,255,.07);border-color:rgba(74,158,255,.3)}
+.ic-num{font-size:22px;font-weight:900;flex-shrink:0;width:36px;text-align:center}
+.ic-sev1 .ic-num{color:var(--rd)}.ic-sev2 .ic-num{color:var(--or)}.ic-sev3 .ic-num{color:var(--bl)}
+.ic-bd .ic-title{font-size:11px;font-weight:700;margin-bottom:3px}
+.ic-sev1 .ic-title{color:var(--rd)}.ic-sev2 .ic-title{color:var(--or)}.ic-sev3 .ic-title{color:var(--bl)}
+.ic-bd .ic-desc{font-size:10px;color:var(--mu2);line-height:1.5}
+
+/* ── AI RISK ITEM ── */
+.risk-item{border-radius:8px;border:1px solid;padding:12px;margin-bottom:8px}
+.risk-critical{background:rgba(255,71,87,.07);border-color:rgba(255,71,87,.3)}
+.risk-high{background:rgba(255,179,0,.07);border-color:rgba(255,179,0,.3)}
+.risk-medium{background:rgba(74,158,255,.07);border-color:rgba(74,158,255,.3)}
+.risk-low{background:rgba(0,200,117,.07);border-color:rgba(0,200,117,.3)}
+.risk-hd{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
+.risk-title{font-size:12px;font-weight:700}
+.risk-critical .risk-title{color:var(--rd)}.risk-high .risk-title{color:var(--or)}
+.risk-medium .risk-title{color:var(--bl)}.risk-low .risk-title{color:var(--gr)}
+.risk-sev{font-size:9px;font-weight:700;padding:2px 8px;border-radius:10px}
+.risk-critical .risk-sev{background:var(--rdd);color:var(--rd)}
+.risk-high .risk-sev{background:var(--ord);color:var(--or)}
+.risk-medium .risk-sev{background:var(--bld);color:var(--bl)}
+.risk-low .risk-sev{background:var(--grd);color:var(--gr)}
+.risk-body{font-size:11px;color:var(--mu2);line-height:1.6}
+.risk-body b{color:var(--tx)}
+.risk-action{font-size:10px;margin-top:6px;padding-top:6px;border-top:1px solid;font-weight:600}
+.risk-critical .risk-action{border-color:rgba(255,71,87,.2);color:var(--rd)}
+.risk-high .risk-action{border-color:rgba(255,179,0,.2);color:var(--or)}
+.risk-medium .risk-action{border-color:rgba(74,158,255,.2);color:var(--bl)}
+.risk-low .risk-action{border-color:rgba(0,200,117,.2);color:var(--gr)}
+
+/* AGING BOXES */
+.aging-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px}
+.aging-box{text-align:center;padding:8px 4px;border-radius:7px;border:1px solid}
+.aging-box .av{font-size:18px;font-weight:900}
+.aging-box .al2{font-size:9px;color:var(--mu);margin-top:2px}
+
+.footer{padding:8px;text-align:center;font-size:9px;color:var(--mu);border-top:1px solid var(--b1)}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="logo">
+    <div class="logo-ic">KTT</div>
+    <div><div class="logo-tx">Finance Control Tower</div><div class="logo-sub">Early Warning System · Misa ERP</div></div>
+  </div>
+  <span class="role-badge">🧮 KẾ TOÁN TRƯỞNG</span>
+  <a href="ktt_bgd.html" class="hdr-link">→ Chuyển sang: Ban Giám Đốc</a>
+  <div class="hdr-r">
+    <div class="live"><div class="dot"></div>LIVE</div>
+    <div class="clk" id="clk">--:--:--</div>
+    <button class="upbtn" onclick="document.getElementById('fi').click()">↑ Upload Misa</button>
+    <input type="file" id="fi" style="display:none" accept=".xlsx,.csv">
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab active" onclick="go(0,this)"><span class="tab-num">01</span> ⚡ Daily Control</div>
+  <div class="tab" onclick="go(1,this)"><span class="tab-num">02</span> ✅ Closing Control</div>
+  <div class="tab" onclick="go(2,this)"><span class="tab-num">03</span> 🧾 VAT Control</div>
+  <div class="tab" onclick="go(3,this)"><span class="tab-num">04</span> 🗼 AR Control</div>
+  <div class="tab" onclick="go(4,this)"><span class="tab-num">05</span> 💳 AP Control</div>
+  <div class="tab" onclick="go(5,this)"><span class="tab-num">06</span> 📦 Inventory</div>
+  <div class="tab" onclick="go(6,this)"><span class="tab-num">07</span> 🏦 Treasury</div>
+  <div class="tab" onclick="go(7,this)"><span class="tab-num">08</span> 🔒 Internal Control</div>
+  <div class="tab" onclick="go(8,this)"><span class="tab-num">09</span> 🤖 AI Summary</div>
+</div>
+
+<!-- ═══ TAB 1: DAILY CONTROL ═══ -->
+<div class="page active" id="p0">
+  <div class="r c6" style="margin-bottom:12px">
+    <div class="kpi kbl"><div class="kl">🏦 Tiền ngân hàng</div><div class="kv">12,40 tỷ</div><div class="kd up">▲ 8,2% vs T4</div><div class="kn">4 TK · Runway 97 ngày</div><div class="kpb"><div class="kpf" style="width:80%;background:var(--bl)"></div></div></div>
+    <div class="kpi krd"><div class="kl">📋 Công nợ phải thu</div><div class="kv">18,10 tỷ</div><div class="kd dn">Quá hạn: 2,18 tỷ ⚠</div><div class="kn">DSO 28 ngày · 42 KH</div><div class="kpb"><div class="kpf" style="width:40%;background:var(--rd)"></div></div></div>
+    <div class="kpi kor"><div class="kl">💳 Công nợ phải trả</div><div class="kv">11,50 tỷ</div><div class="kd wa">Đến hạn T6: 3,8 tỷ</div><div class="kn">DPO 32 ngày · 28 NCC</div><div class="kpb"><div class="kpf" style="width:35%;background:var(--or)"></div></div></div>
+    <div class="kpi kpu"><div class="kl">📦 Tồn kho</div><div class="kv">8,40 tỷ</div><div class="kd dn">Chôn vốn: 1,8 tỷ ⚠</div><div class="kn">Vòng quay 45 ngày</div><div class="kpb"><div class="kpf" style="width:60%;background:var(--pu)"></div></div></div>
+    <div class="kpi kor"><div class="kl">🧾 VAT phải nộp T5</div><div class="kv">486 tr</div><div class="kd wa">Hạn 20/06 ⚠</div><div class="kn">VAT đầu ra 2,87 tỷ</div><div class="kpb"><div class="kpf" style="width:50%;background:var(--or)"></div></div></div>
+    <div class="kpi kpu"><div class="kl">🏛 Dư nợ vay</div><div class="kv">6,20 tỷ</div><div class="kd wa">Đến hạn T8: 3,2 tỷ</div><div class="kn">Lãi vay T5: 62 tr</div><div class="kpb"><div class="kpf" style="width:28%;background:var(--pu)"></div></div></div>
+  </div>
+
+  <div class="r c2">
+    <div class="card">
+      <div class="hd"><div class="ct">⚡ Cảnh báo Early Warning — Hôm nay</div><div class="cb" id="alert-time"></div></div>
+      <div class="al alc"><div class="al-ic">🔴</div><div class="al-bd"><div class="al-title">ABC Trading quá hạn 67 ngày — 850 tr</div><div class="al-desc">Liên hệ lần 3 không phản hồi. Cân nhắc biện pháp pháp lý.</div><div class="al-meta">TK 131 · Phụ trách: Nguyễn Văn A</div><button class="al-btn">Giao việc ngay</button></div></div>
+      <div class="al alc"><div class="al-ic">🔴</div><div class="al-bd"><div class="al-title">Vật tư SX NL-012 — Tồn 9%, còn 3 ngày</div><div class="al-desc">Dừng sản xuất 01/06 nếu không đặt mua hôm nay.</div><div class="al-meta">TK 152 · Bộ phận: Kho vận</div><button class="al-btn">Tạo đơn mua khẩn</button></div></div>
+      <div class="al alw"><div class="al-ic">🟡</div><div class="al-bd"><div class="al-title">5 hóa đơn đầu vào chưa hạch toán</div><div class="al-desc">Tổng 3.240.000.000đ. Ảnh hưởng chi phí tháng nếu không xử lý trước 31/05.</div><div class="al-meta">NCC: ABC, XYZ, DEF, GHI, JKL</div><button class="al-btn">Xem danh sách</button></div></div>
+      <div class="al alw"><div class="al-ic">🟡</div><div class="al-bd"><div class="al-title">VAT đầu vào tháng 5 tăng 23% so tháng 4</div><div class="al-desc">Tăng từ 195 tr → 241 tr. Kiểm tra NCC mới và hóa đơn bất thường.</div><div class="al-meta">Phát hiện lúc 06:15 hôm nay</div><button class="al-btn">Kiểm tra</button></div></div>
+      <div class="al alw"><div class="al-ic">🟡</div><div class="al-bd"><div class="al-title">Khoản vay VCB đến hạn tháng 8 — 3,2 tỷ</div><div class="al-desc">Còn 92 ngày. Cần lập kế hoạch nguồn tiền hoặc gia hạn.</div><div class="al-meta">Hợp đồng số: VCB-2024-0812</div><button class="al-btn">Xem lịch trả nợ</button></div></div>
+      <div class="al ali"><div class="al-ic">ℹ️</div><div class="al-bd"><div class="al-title">Tồn kho SP-A tăng 28% so tháng 3</div><div class="al-desc">Thành phẩm SP-A: 4.200 đv → đang chiếm 840 tr vốn lưu động dư thừa.</div><div class="al-meta">TK 155 · Kho thành phẩm</div><button class="al-btn">Xem chi tiết</button></div></div>
+    </div>
+
+    <div>
+      <div class="card" style="margin-bottom:10px">
+        <div class="hd"><div class="ct">📊 Xu hướng 6 chỉ số — 6 tháng gần nhất</div><div class="cb">Tỷ VNĐ</div></div>
+        <div class="chs h180"><canvas id="c0_trend"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="hd"><div class="ct">📋 Chứng từ cần xử lý hôm nay</div><div class="cb" style="color:var(--rd)">8 mục</div></div>
+        <table class="tbl">
+          <thead><tr><th>Loại</th><th>Số lượng</th><th>Giá trị</th><th class="tc">Hạn xử lý</th></tr></thead>
+          <tbody>
+            <tr><td>HĐ đầu vào chưa HT</td><td>5</td><td>3.240.000.000</td><td class="tc"><span class="tag to">31/05</span></td></tr>
+            <tr><td>HĐ đầu ra chờ xác nhận</td><td>2</td><td>1.850.000.000</td><td class="tc"><span class="tag to">31/05</span></td></tr>
+            <tr><td>Phiếu thu chưa đối chiếu</td><td>3</td><td>620.000.000</td><td class="tc"><span class="tag tr2">Hôm nay</span></td></tr>
+            <tr><td>Phiếu chi chờ duyệt</td><td>4</td><td>1.200.000.000</td><td class="tc"><span class="tag tr2">Hôm nay</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TAB 2: CLOSING CONTROL ═══ -->
+<div class="page" id="p1">
+  <div class="r c2">
+    <div class="card">
+      <div class="hd"><div class="ct">✅ Checklist Khóa Sổ Tháng 5/2026</div><div class="cb">Hoàn thành: 68%</div></div>
+      <div style="margin-bottom:10px">
+        <div style="background:var(--s2);border-radius:8px;padding:10px 12px;display:flex;align-items:center;gap:12px">
+          <div style="font-size:32px;font-weight:900;color:var(--or)">68%</div>
+          <div style="flex:1">
+            <div class="pgbg" style="height:10px;border-radius:5px">
+              <div class="pgf" style="width:68%;background:linear-gradient(90deg,var(--bl),var(--gr))"></div>
+            </div>
+            <div style="font-size:9px;color:var(--mu);margin-top:5px">17/25 hạng mục · Hạn đóng: 31/05/2026</div>
+          </div>
+        </div>
+      </div>
+      <div class="ck-item done"><div class="ck-box">✓</div><div class="ck-text">Đối chiếu công nợ phải thu (131)</div><div class="ck-meta">Hoàn thành 29/05</div></div>
+      <div class="ck-item done"><div class="ck-box">✓</div><div class="ck-text">Đối chiếu công nợ phải trả (331)</div><div class="ck-meta">Hoàn thành 29/05</div></div>
+      <div class="ck-item done"><div class="ck-box">✓</div><div class="ck-text">Kiểm kê tiền mặt & đối chiếu NH</div><div class="ck-meta">Hoàn thành 28/05</div></div>
+      <div class="ck-item done"><div class="ck-box">✓</div><div class="ck-text">Hạch toán lương tháng 5</div><div class="ck-meta">Hoàn thành 28/05</div></div>
+      <div class="ck-item done"><div class="ck-box">✓</div><div class="ck-text">Phân bổ chi phí trả trước</div><div class="ck-meta">Hoàn thành 27/05</div></div>
+      <div class="ck-item pending"><div class="ck-box"></div><div class="ck-text">Hạch toán hóa đơn đầu vào còn lại (5 HĐ)</div><div class="ck-meta">⏳ Còn 2 ngày</div></div>
+      <div class="ck-item pending"><div class="ck-box"></div><div class="ck-text">Tính và hạch toán giá vốn tháng 5</div><div class="ck-meta">⏳ Còn 2 ngày</div></div>
+      <div class="ck-item pending"><div class="ck-box"></div><div class="ck-text">Lập tờ khai VAT tháng 5</div><div class="ck-meta">⏳ Hạn 20/06</div></div>
+      <div class="ck-item issue"><div class="ck-box">!</div><div class="ck-text">Kiểm kê hàng tồn kho — Phát hiện lệch</div><div class="ck-meta">🔴 Chênh lệch 15 đv SP-A · Cần điều tra</div></div>
+      <div class="ck-item issue"><div class="ck-box">!</div><div class="ck-text">Lệch VAT đầu vào — 2 hóa đơn nghi vấn</div><div class="ck-meta">🔴 Cần xác nhận với NCC trước 31/05</div></div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:10px">
+        <div class="hd"><div class="ct">⚠ Vấn đề phát hiện khi đóng sổ</div><div class="cb" style="color:var(--rd)">4 vấn đề</div></div>
+        <div class="al alc"><div class="al-ic">🔴</div><div class="al-bd"><div class="al-title">Âm kho — 3 SKU</div><div class="al-desc">SP-C: -12 đv · HH-08: -5 đv · NL-003: -8 đv. Nguyên nhân: xuất kho chưa đủ phiếu nhập.</div><button class="al-btn">Điều chỉnh ngay</button></div></div>
+        <div class="al alc"><div class="al-ic">🔴</div><div class="al-bd"><div class="al-title">2 chứng từ backdate tháng 4</div><div class="al-desc">CT#4512 và CT#4518 nhập ngày 26/05 nhưng ghi ngày 15/04. Vi phạm quy trình.</div><button class="al-btn">Xem & Xử lý</button></div></div>
+        <div class="al alw"><div class="al-ic">🟡</div><div class="al-bd"><div class="al-title">Lệch VAT đầu vào 2 hóa đơn</div><div class="al-desc">HĐ NCC DEF: VAT ghi 10% nhưng hàng hoá thuộc nhóm 5%. Chênh 12,5 tr.</div><button class="al-btn">Liên hệ NCC</button></div></div>
+        <div class="al alw"><div class="al-ic">🟡</div><div class="al-bd"><div class="al-title">Chênh lệch kiểm kê 15 đv SP-A</div><div class="al-desc">Sổ kế toán: 4.215 · Kiểm kê thực tế: 4.200. Chênh 15 đv ≈ 3 tr.</div><button class="al-btn">Lập biên bản</button></div></div>
+      </div>
+      <div class="card">
+        <div class="hd"><div class="ct">📊 Tiến độ khóa sổ so sánh các tháng</div><div class="cb">%</div></div>
+        <div class="chs h160"><canvas id="c1_closing"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TAB 3: VAT CONTROL ═══ -->
+<div class="page" id="p2">
+  <div class="r c4">
+    <div class="kpi kgr"><div class="kl">📥 VAT Đầu vào T5</div><div class="kv kv-sm">241 tr</div><div class="kd dn">▲ 23% vs T4 ⚠</div><div class="kn">TK 133 · 48 hóa đơn</div></div>
+    <div class="kpi krd"><div class="kl">📤 VAT Đầu ra T5</div><div class="kv kv-sm">2.870 tr</div><div class="kd up">▲ 12% vs T4</div><div class="kn">TK 3331 · Theo DT</div></div>
+    <div class="kpi kor"><div class="kl">💰 VAT Phải nộp T5</div><div class="kv kv-sm">486 tr</div><div class="kd wa">Hạn: 20/06/2026</div><div class="kn">= Đầu ra - Đầu vào</div></div>
+    <div class="kpi kpu"><div class="kl">📊 Luỹ kế VAT 2026</div><div class="kv kv-sm">2.180 tr</div><div class="kd up">▲ 18% vs 2025</div><div class="kn">5 tháng đầu năm</div></div>
+  </div>
+  <div class="r c2">
+    <div class="card">
+      <div class="hd"><div class="ct">📊 VAT đầu vào / đầu ra 6 tháng</div><div class="cb">Triệu VNĐ</div></div>
+      <div class="chs h180"><canvas id="c2_vat"></canvas></div>
+      <hr class="dv">
+      <div class="hd" style="margin-bottom:8px"><div class="ct">🔍 Hóa đơn VAT bất thường</div><div class="cb" style="color:var(--rd)">3 cần kiểm tra</div></div>
+      <table class="tbl">
+        <thead><tr><th>NCC</th><th>Số HĐ</th><th class="tr">Giá trị</th><th>Vấn đề</th></tr></thead>
+        <tbody>
+          <tr><td>NCC DEF Co.</td><td>HĐ-0512</td><td class="tr">125.000.000</td><td><span class="tag tr2">SAI thuế suất</span></td></tr>
+          <tr><td>NCC GHI Ltd</td><td>HĐ-0498</td><td class="tr">89.000.000</td><td><span class="tag to">Nghi trùng</span></td></tr>
+          <tr><td>NCC JKL Corp</td><td>HĐ-0501</td><td class="tr">210.000.000</td><td><span class="tag to">NCC rủi ro</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="hd"><div class="ct">🏆 Top NCC có VAT đầu vào lớn nhất</div><div class="cb">T5/2026</div></div>
+      <div class="chs h180"><canvas id="c2_vat_ncc"></canvas></div>
+      <hr class="dv">
+      <div class="hd" style="margin-bottom:8px"><div class="ct">⚠ NCC rủi ro VAT</div></div>
+      <div class="al alc"><div class="al-ic">🔴</div><div class="al-bd"><div class="al-title">NCC JKL Corp — Hóa đơn nghi giả</div><div class="al-desc">Mã số thuế không khớp với tên doanh nghiệp. Giá trị: 210 tr. Dừng hạch toán và xác minh.</div><button class="al-btn">Xác minh ngay</button></div></div>
+      <div class="al alw"><div class="al-ic">🟡</div><div class="al-bd"><div class="al-title">NCC DEF — Áp sai thuế suất 10% thay vì 5%</div><div class="al-desc">Hàng hoá nhóm thiết yếu, thuế suất đúng là 5%. Đề nghị NCC xuất lại.</div><button class="al-btn">Liên hệ NCC</button></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TAB 4: AR CONTROL TOWER ═══ -->
+<div class="page" id="p3">
+  <div class="r c4">
+    <div class="kpi kbl"><div class="kl">📋 Tổng phải thu (131)</div><div class="kv">18,10 tỷ</div><div class="kd">42 khách hàng</div><div class="kn">TK 131 — Misa</div></div>
+    <div class="kpi kcy"><div class="kl">📅 DSO</div><div class="kv">28 ngày</div><div class="kd up">KH ≤30 ngày ✓</div><div class="kn">Cải thiện 3 ngày vs T4</div></div>
+    <div class="kpi krd"><div class="kl">⚠ Công nợ quá hạn</div><div class="kv">2,18 tỷ</div><div class="kd dn">▲ 12% vs T4</div><div class="kn">12% / tổng phải thu</div></div>
+    <div class="kpi kor"><div class="kl">🔥 Nguy hiểm &gt;60 ngày</div><div class="kv">1,47 tỷ</div><div class="kd dn">2 khách hàng</div><div class="kn">Hành động ngay hôm nay</div></div>
+  </div>
+  <div class="r c2">
+    <div class="card">
+      <div class="hd"><div class="ct">📊 AR Aging Analysis — Phân tích tuổi nợ</div><div class="cb">Tỷ VNĐ</div></div>
+      <div class="aging-grid">
+        <div class="aging-box" style="background:var(--grd);border-color:var(--grb)"><div class="av" style="color:var(--gr)">15,92 tỷ</div><div class="al2">&lt;30 ngày</div></div>
+        <div class="aging-box" style="background:var(--ord);border-color:var(--orb)"><div class="av" style="color:var(--or)">0,71 tỷ</div><div class="al2">30–60 ngày</div></div>
+        <div class="aging-box" style="background:var(--rdd);border-color:var(--rdb)"><div class="av" style="color:var(--rd)">1,47 tỷ</div><div class="al2">60–90 ngày</div></div>
+        <div class="aging-box" style="background:rgba(127,29,29,.15);border-color:rgba(239,68,68,.4)"><div class="av" style="color:#f87171">0</div><div class="al2">&gt;90 ngày</div></div>
+      </div>
+      <div class="chs h160"><canvas id="c3_ar_aging"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="hd"><div class="ct">🗼 Danh sách công nợ — Phân loại ưu tiên</div></div>
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead><tr><th>#</th><th>Khách hàng</th><th class="tr">Tổng nợ</th><th class="tr">Quá hạn</th><th class="tc">Ngày QH</th><th class="tc">Mức độ</th><th>Phụ trách</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td><b style="color:#fff">TNHH ABC Trading</b></td><td class="tr">1.250 tr</td><td class="tr" style="color:var(--rd);font-weight:700">850 tr</td><td class="tc"><span class="tag tr2">67 ngày</span></td><td class="tc"><span class="tag tr2">🔴 Nguy hiểm</span></td><td>Nguyễn Văn A</td></tr>
+            <tr><td>2</td><td><b style="color:#fff">CTCP XYZ Tech</b></td><td class="tr">980 tr</td><td class="tr" style="color:var(--rd);font-weight:700">620 tr</td><td class="tc"><span class="tag tr2">45 ngày</span></td><td class="tc"><span class="tag tr2">🔴 Nguy hiểm</span></td><td>Trần Thị B</td></tr>
+            <tr><td>3</td><td>CTCP DEF Phát triển</td><td class="tr">750 tr</td><td class="tr" style="color:var(--or)">430 tr</td><td class="tc"><span class="tag to">32 ngày</span></td><td class="tc"><span class="tag to">🟡 Chú ý</span></td><td>Lê Minh C</td></tr>
+            <tr><td>4</td><td>HTX GHI Nông nghiệp</td><td class="tr">520 tr</td><td class="tr" style="color:var(--or)">280 tr</td><td class="tc"><span class="tag to">28 ngày</span></td><td class="tc"><span class="tag to">🟡 Chú ý</span></td><td>Phạm Thu D</td></tr>
+            <tr><td>5</td><td>TNHH JKL Import</td><td class="tr">380 tr</td><td class="tr" style="color:var(--gr)">—</td><td class="tc">—</td><td class="tc"><span class="tag tg">✅ Tốt</span></td><td>Hoàng Lan E</td></tr>
+            <tr><td>6</td><td>CTCP MNO Services</td><td class="tr">290 tr</td><td class="tr" style="color:var(--gr)">—</td><td class="tc">—</td><td class="tc"><span class="tag tg">✅ Tốt</span></td><td>Vũ Đức F</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <hr class="dv">
+      <div class="hd" style="margin-bottom:8px"><div class="ct">📈 Xu hướng thu hồi công nợ</div></div>
+      <div class="chs h120"><canvas id="c3_ar_trend"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TAB 5: AP CONTROL ═══ -->
+<div class="page" id="p4">
+  <div class="r c4">
+    <div class="kpi kpu"><div class="kl">💳 Tổng phải trả (331)</div><div class="kv">11,50 tỷ</div><div class="kd">28 nhà cung cấp</div><div class="kn">TK 331 — Misa</div></div>
+    <div class="kpi krd"><div class="kl">⏰ Đến hạn trong 7 ngày</div><div class="kv">3,80 tỷ</div><div class="kd dn">Cần phê duyệt sớm</div><div class="kn">5 khoản thanh toán</div></div>
+    <div class="kpi kor"><div class="kl">⚠ Quá hạn thanh toán</div><div class="kv">0,42 tỷ</div><div class="kd dn">2 NCC đang nhắc</div><div class="kn">DPO hiện tại: 32 ngày</div></div>
+    <div class="kpi kcy"><div class="kl">📅 DPO</div><div class="kv">32 ngày</div><div class="kd up">KH 30-45 ngày ✓</div><div class="kn">Tốt — trong ngưỡng</div></div>
+  </div>
+  <div class="r c2">
+    <div class="card">
+      <div class="hd"><div class="ct">📅 Lịch thanh toán sắp đến hạn</div><div class="cb">30 ngày tới</div></div>
+      <table class="tbl">
+        <thead><tr><th>NCC</th><th>Nội dung</th><th>Hạn TT</th><th class="tr">Số tiền</th><th class="tc">Tình trạng</th></tr></thead>
+        <tbody>
+          <tr><td><b style="color:#fff">NCC ABC Materials</b></td><td>Vật tư T5</td><td style="color:var(--rd)">30/05</td><td class="tr" style="color:var(--rd);font-weight:700">1.200.000.000</td><td class="tc"><span class="tag tr2">🔴 Hôm nay</span></td></tr>
+          <tr><td>NCC XYZ Logistics</td><td>Vận chuyển T5</td><td style="color:var(--or)">31/05</td><td class="tr">380.000.000</td><td class="tc"><span class="tag to">⏳ Ngày mai</span></td></tr>
+          <tr><td>NCC DEF Supplies</td><td>Bao bì T5</td><td>03/06</td><td class="tr">650.000.000</td><td class="tc"><span class="tag tb">📅 4 ngày</span></td></tr>
+          <tr><td>NH VCB (Lãi vay)</td><td>Lãi T5/2026</td><td>05/06</td><td class="tr">62.000.000</td><td class="tc"><span class="tag tb">📅 6 ngày</span></td></tr>
+          <tr><td>NCC GHI Equipment</td><td>Thuê TB T5-T6</td><td>10/06</td><td class="tr">420.000.000</td><td class="tc"><span class="tag tg">✓ 11 ngày</span></td></tr>
+          <tr><td>NCC JKL Services</td><td>IT & Vận hành</td><td>15/06</td><td class="tr">180.000.000</td><td class="tc"><span class="tag tg">✓ 16 ngày</span></td></tr>
+          <tr><td><b>NH VCB (Gốc vay)</b></td><td><b>Trả nợ gốc T8</b></td><td style="color:var(--or)">15/08</td><td class="tr" style="color:var(--or);font-weight:700">3.200.000.000</td><td class="tc"><span class="tag to">⚠ 77 ngày</span></td></tr>
+        </tbody>
+      </table>
+      <hr class="dv">
+      <div style="font-size:11px;display:flex;justify-content:space-between;padding:4px 0">
+        <span style="color:var(--mu)">Tổng phải thanh toán 30 ngày tới:</span>
+        <span style="color:var(--rd);font-weight:800">6.092.000.000 đồng</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="hd"><div class="ct">📊 Lịch thanh toán theo tuần</div><div class="cb">Tỷ VNĐ</div></div>
+      <div class="chs h180"><canvas id="c4_ap"></canvas></div>
+      <hr class="dv">
+      <div class="hd" style="margin-bottom:8px"><div class="ct">⚠ NCC đang nhắc thanh toán quá hạn</div></div>
+      <div class="al alc"><div class="al-ic">📞</div><div class="al-bd"><div class="al-title">NCC PQR Corp — QH 8 ngày · 280 tr</div><div class="al-desc">Gọi điện ngày 27/05 và 29/05. Yêu cầu thanh toán ngay hoặc ảnh hưởng đơn hàng T6.</div><button class="al-btn">Phê duyệt TT</button></div></div>
+      <div class="al alw"><div class="al-ic">📧</div><div class="al-bd"><div class="al-title">NCC STU Ltd — QH 3 ngày · 142 tr</div><div class="al-desc">Email nhắc lần 2. Chưa ảnh hưởng cung ứng nhưng cần xử lý trong hôm nay.</div><button class="al-btn">Phê duyệt TT</button></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TAB 6: INVENTORY CONTROL ═══ -->
+<div class="page" id="p5">
+  <div class="r c4">
+    <div class="kpi kpu"><div class="kl">📦 Tổng tồn kho</div><div class="kv">8,40 tỷ</div><div class="kd dn">▲ 6% vs T4 — hơi cao</div><div class="kn">124 SKU · TK 152,155,156</div></div>
+    <div class="kpi krd"><div class="kl">💀 Dead Stock &gt;180 ngày</div><div class="kv">0,70 tỷ</div><div class="kd dn">2 SKU · Cần xử lý gấp</div><div class="kn">Chiếm 8,3% tổng tồn</div></div>
+    <div class="kpi kor"><div class="kl">🐌 Hàng chậm (90-180 ngày)</div><div class="kv">1,10 tỷ</div><div class="kd wa">3 SKU · Theo dõi</div><div class="kn">13,1% tổng tồn</div></div>
+    <div class="kpi kcy"><div class="kl">🔄 Inventory Turnover</div><div class="kv">45 ngày</div><div class="kd dn">KH ≤40 ngày ⚠</div><div class="kn">Cần cải thiện T6</div></div>
+  </div>
+  <div class="r c2">
+    <div class="card">
+      <div class="hd"><div class="ct">📊 Inventory Aging — Phân tích tuổi hàng</div><div class="cb">Tỷ VNĐ</div></div>
+      <div class="aging-grid">
+        <div class="aging-box" style="background:var(--grd);border-color:var(--grb)"><div class="av" style="color:var(--gr)">5,2 tỷ</div><div class="al2">&lt;30 ngày</div></div>
+        <div class="aging-box" style="background:var(--bld);border-color:var(--blb)"><div class="av" style="color:var(--bl)">1,4 tỷ</div><div class="al2">30–90 ngày</div></div>
+        <div class="aging-box" style="background:var(--ord);border-color:var(--orb)"><div class="av" style="color:var(--or)">1,1 tỷ</div><div class="al2">90–180 ngày</div></div>
+        <div class="aging-box" style="background:var(--rdd);border-color:var(--rdb)"><div class="av" style="color:var(--rd)">0,7 tỷ</div><div class="al2">&gt;180 ngày 🔴</div></div>
+      </div>
+      <div class="chs h160"><canvas id="c5_inv"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="hd"><div class="ct">⚠ SKU cần xử lý — Dead Stock & Sắp hết</div></div>
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead><tr><th>Mã SKU</th><th>Tên hàng</th><th class="tc">Tồn kho</th><th class="tc">Mức tối ưu</th><th class="tc">Số ngày tồn</th><th class="tr">Giá trị</th><th class="tc">Phân loại</th><th>Đề xuất</th></tr></thead>
+          <tbody>
+            <tr><td>SP-A</td><td>Thành phẩm A</td><td class="tc">4.200</td><td class="tc">1.500</td><td class="tc"><span class="tag tr2">185 ngày</span></td><td class="tr" style="color:var(--rd)">840 tr</td><td class="tc"><span class="tag tr2">💀 Dead</span></td><td style="font-size:9px;color:var(--or)">Giảm giá 15%</td></tr>
+            <tr><td>SP-B</td><td>Thành phẩm B</td><td class="tc">3.800</td><td class="tc">1.200</td><td class="tc"><span class="tag tr2">162 ngày</span></td><td class="tr" style="color:var(--rd)">570 tr</td><td class="tc"><span class="tag tr2">💀 Dead</span></td><td style="font-size:9px;color:var(--or)">Ngừng nhập</td></tr>
+            <tr><td>HH-05</td><td>Hàng hoá nhóm 5</td><td class="tc">2.100</td><td class="tc">1.500</td><td class="tc"><span class="tag to">95 ngày</span></td><td class="tr" style="color:var(--or)">390 tr</td><td class="tc"><span class="tag to">🐌 Chậm</span></td><td style="font-size:9px;color:var(--mu2)">Theo dõi</td></tr>
+            <tr><td>NL-012</td><td>Vật tư SX (cuộn thép)</td><td class="tc">120</td><td class="tc">800</td><td class="tc"><span class="tag tr2">3 ngày còn</span></td><td class="tr">180 tr</td><td class="tc"><span class="tag tr2">🔴 Hết</span></td><td style="font-size:9px;color:var(--rd);font-weight:700">Mua KHẨN</td></tr>
+            <tr><td>BB-003</td><td>Bao bì carton</td><td class="tc">200</td><td class="tc">1.000</td><td class="tc"><span class="tag to">—</span></td><td class="tr">40 tr</td><td class="tc"><span class="tag to">⚠ Thấp</span></td><td style="font-size:9px;color:var(--or)">Đặt mua 2 ngày</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TAB 7: TREASURY ═══ -->
+<div class="page" id="p6">
+  <div class="r c4">
+    <div class="kpi kbl"><div class="kl">💰 Tổng tiền & NH</div><div class="kv">12,40 tỷ</div><div class="kd up">Runway 97 ngày</div><div class="kn">4 tài khoản</div></div>
+    <div class="kpi kpu"><div class="kl">🏛 Dư nợ vay</div><div class="kv">6,20 tỷ</div><div class="kd wa">Gốc + lãi T8: 3,26 tỷ</div><div class="kn">Debt ratio 28,4%</div></div>
+    <div class="kpi kor"><div class="kl">📅 Lãi vay tháng 5</div><div class="kv">62 tr</div><div class="kd">LS bình quân 5,2%/năm</div><div class="kn">Hạn nộp: 05/06</div></div>
+    <div class="kpi kgr"><div class="kl">📈 Lãi tiền gửi T5</div><div class="kv">18 tr</div><div class="kd up">Từ tiền gửi có KH</div><div class="kn">VCB 2 tỷ · 3 tháng</div></div>
+  </div>
+  <div class="r c2">
+    <div class="card">
+      <div class="hd"><div class="ct">🏦 Số dư từng ngân hàng — Chi tiết</div></div>
+      <table class="tbl">
+        <thead><tr><th>Ngân hàng</th><th>Số TK</th><th class="tr">Số dư</th><th>Mục đích</th><th class="tc">Trạng thái</th></tr></thead>
+        <tbody>
+          <tr><td><b style="color:#fff">Vietcombank</b></td><td>···1234</td><td class="tr" style="font-weight:700;color:#fff">5.200.000.000</td><td>TK thanh toán chính</td><td class="tc"><span class="tag tg">✓ Active</span></td></tr>
+          <tr><td><b style="color:#fff">ACB</b></td><td>···5678</td><td class="tr" style="font-weight:700;color:#fff">3.800.000.000</td><td>TK dự phòng + lương</td><td class="tc"><span class="tag tg">✓ Active</span></td></tr>
+          <tr><td>Techcombank</td><td>···9012</td><td class="tr" style="font-weight:700">2.100.000.000</td><td>TK nhận tiền KH</td><td class="tc"><span class="tag tg">✓ Active</span></td></tr>
+          <tr><td>BIDV</td><td>···3456</td><td class="tr" style="font-weight:700">1.300.000.000</td><td>TK vay vốn NH</td><td class="tc"><span class="tag tp">Có dư nợ</span></td></tr>
+        </tbody>
+      </table>
+      <div style="display:flex;justify-content:space-between;font-size:12px;padding:8px 8px 2px;border-top:1px solid var(--b1);margin-top:4px">
+        <span style="color:var(--mu)">TỔNG</span>
+        <span style="color:var(--cy);font-weight:800">12.400.000.000 đồng</span>
+      </div>
+      <hr class="dv">
+      <div class="hd" style="margin-bottom:8px"><div class="ct">📊 Biến động số dư tiền 6 tháng</div></div>
+      <div class="chs h140"><canvas id="c6_cash"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="hd"><div class="ct">🏛 Lịch trả nợ vay</div></div>
+      <table class="tbl">
+        <thead><tr><th>Ngân hàng</th><th>Khoản vay</th><th>Hạn</th><th class="tr">Gốc</th><th class="tr">Lãi</th><th class="tc">Tình trạng</th></tr></thead>
+        <tbody>
+          <tr><td>VCB</td><td>VCB-2024-0812</td><td style="color:var(--or)">15/08/2026</td><td class="tr" style="color:var(--or);font-weight:700">3.200.000.000</td><td class="tr">62.000.000</td><td class="tc"><span class="tag to">⚠ 77 ngày</span></td></tr>
+          <tr><td>BIDV</td><td>BIDV-2025-0203</td><td>20/11/2026</td><td class="tr">1.500.000.000</td><td class="tr">28.000.000</td><td class="tc"><span class="tag tg">✓ 175 ngày</span></td></tr>
+          <tr><td>VCB</td><td>VCB-2025-0901 (thấu)</td><td>Liên tục</td><td class="tr">1.500.000.000</td><td class="tr">18.500.000</td><td class="tc"><span class="tag tb">Thấu chi</span></td></tr>
+        </tbody>
+      </table>
+      <hr class="dv">
+      <div class="hd" style="margin-bottom:8px"><div class="ct">⚠ Cảnh báo dòng tiền & khoản vay</div></div>
+      <div class="al alw"><div class="al-ic">🟡</div><div class="al-bd"><div class="al-title">Khoản vay VCB 3,2 tỷ đến hạn T8/2026</div><div class="al-desc">Còn 77 ngày. Số dư dự báo T8 chỉ còn 4,1 tỷ. Cần thu hồi công nợ hoặc thương lượng gia hạn.</div><button class="al-btn">Lập kế hoạch</button></div></div>
+      <div class="al ali"><div class="al-ic">💡</div><div class="al-bd"><div class="al-title">VCB dư 2 tỷ — Cơ hội gửi tiết kiệm</div><div class="al-desc">Số dư vượt nhu cầu vận hành. Gửi kỳ hạn 1 tháng lãi 5,2%/năm = +8,7 tr/tháng.</div><button class="al-btn">Phê duyệt</button></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TAB 8: INTERNAL CONTROL ═══ -->
+<div class="page" id="p7">
+  <div class="r c4">
+    <div class="kpi krd"><div class="kl">🔴 Backdate chứng từ</div><div class="kv kv-sm">2</div><div class="kd dn">Tháng 4 — Vi phạm</div><div class="kn">CT#4512, CT#4518</div></div>
+    <div class="kpi krd"><div class="kl">⬇ Âm kho</div><div class="kv kv-sm">3 SKU</div><div class="kd dn">SP-C · HH-08 · NL-003</div><div class="kn">Cần điều chỉnh ngay</div></div>
+    <div class="kpi kor"><div class="kl">🔍 Lệch kiểm kê</div><div class="kv kv-sm">1</div><div class="kd wa">SP-A: lệch 15 đv</div><div class="kn">≈ 3 triệu đồng</div></div>
+    <div class="kpi kor"><div class="kl">🔄 Thanh toán nghi trùng</div><div class="kv kv-sm">1</div><div class="kd wa">NCC GHI HĐ-0498</div><div class="kn">Cần đối chiếu</div></div>
+  </div>
+  <div class="r c2">
+    <div class="card">
+      <div class="hd"><div class="ct">🔒 Vi phạm kiểm soát nội bộ — T5/2026</div><div class="cb" style="color:var(--rd)">Cần xử lý</div></div>
+      <div class="ic-item ic-sev1"><div class="ic-num">2</div><div class="ic-bd"><div class="ic-title">Chứng từ Backdate — Nhập ngày tháng 4 vào tháng 5</div><div class="ic-desc">CT#4512 (NCC ABC, 850 tr) và CT#4518 (phiếu chi nội bộ, 45 tr) được nhập ngày 26/05 nhưng ghi ngày 15/04. Vi phạm nguyên tắc kỳ kế toán. <b style="color:var(--tx)">Cần điều tra và báo cáo BGĐ.</b></div></div></div>
+      <div class="ic-item ic-sev1"><div class="ic-num">3</div><div class="ic-bd"><div class="ic-title">Âm kho — Xuất kho vượt tồn</div><div class="ic-desc">SP-C: -12 đv · HH-08: -5 đv · NL-003: -8 đv. Nguyên nhân: xuất kho chưa cập nhật phiếu nhập tương ứng, hoặc sai đơn vị tính. <b style="color:var(--tx)">Cần điều chỉnh và kiểm tra quy trình nhập-xuất.</b></div></div></div>
+      <div class="ic-item ic-sev2"><div class="ic-num">1</div><div class="ic-bd"><div class="ic-title">Thanh toán có thể bị trùng — NCC GHI</div><div class="ic-desc">HĐ-0498 (NCC GHI, 89 tr) xuất hiện 2 lần trong danh sách thanh toán tháng 5. Có thể là HĐ trùng hoặc nhập liệu 2 lần. <b style="color:var(--tx)">Đối chiếu với NCC trước khi thanh toán.</b></div></div></div>
+      <div class="ic-item ic-sev2"><div class="ic-num">1</div><div class="ic-bd"><div class="ic-title">Chênh lệch kiểm kê SP-A — 15 đơn vị</div><div class="ic-desc">Sổ sách: 4.215 đv · Thực tế: 4.200 đv. Chênh 15 đv ≈ 3 triệu. Cần lập biên bản kiểm kê và điều chỉnh.</div></div></div>
+    </div>
+    <div class="card">
+      <div class="hd"><div class="ct">👤 Log hoạt động người dùng — Đáng chú ý</div><div class="cb">7 ngày gần nhất</div></div>
+      <table class="tbl">
+        <thead><tr><th>Thời gian</th><th>User</th><th>Hành động</th><th>Đối tượng</th><th class="tc">Mức độ</th></tr></thead>
+        <tbody>
+          <tr><td>29/05 22:47</td><td style="color:#fff;font-weight:700">kttruong</td><td>Sửa chứng từ</td><td>CT#4512 — sau khóa sổ T4</td><td class="tc"><span class="tag tr2">🔴 Vi phạm</span></td></tr>
+          <tr><td>28/05 08:15</td><td>nhanvien_a</td><td>Xóa phiếu xuất kho</td><td>PX-0845 — SP-C</td><td class="tc"><span class="tag tr2">🔴 Bất thường</span></td></tr>
+          <tr><td>27/05 17:32</td><td>kttruong</td><td>Nhập HĐ backdate</td><td>CT#4518 ngày 15/04</td><td class="tc"><span class="tag tr2">🔴 Vi phạm</span></td></tr>
+          <tr><td>26/05 14:22</td><td>nhanvien_b</td><td>In phiếu thanh toán</td><td>NCC GHI — 2 lần</td><td class="tc"><span class="tag to">🟡 Chú ý</span></td></tr>
+          <tr><td>25/05 09:10</td><td>manager_c</td><td>Duyệt chi</td><td>Phiếu chi 450 tr — ngoài hạn mức</td><td class="tc"><span class="tag to">🟡 Chú ý</span></td></tr>
+        </tbody>
+      </table>
+      <hr class="dv">
+      <div class="hd" style="margin-bottom:8px"><div class="ct">📊 Vi phạm IC theo tháng</div></div>
+      <div class="chs h120"><canvas id="c7_ic"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TAB 9: AI FINANCE SUMMARY ═══ -->
+<div class="page" id="p8">
+  <!-- AI Banner -->
+  <div style="background:linear-gradient(135deg,#0a1020,#0f1830);border:1px solid var(--b1);border-radius:12px;padding:16px 20px;margin-bottom:14px;display:flex;align-items:flex-start;gap:16px">
+    <div style="text-align:center;flex-shrink:0">
+      <div style="font-size:42px;font-weight:900;color:var(--or);line-height:1">72</div>
+      <div style="font-size:9px;color:var(--mu);text-transform:uppercase">Health Score</div>
+      <div style="font-size:10px;color:var(--or);margin-top:2px">/ 100</div>
+    </div>
+    <div style="flex:1">
+      <div style="font-size:13px;font-weight:800;color:#fff;margin-bottom:6px">🤖 AI Finance Summary — Báo cáo tự động ngày 29/05/2026</div>
+      <div style="font-size:11px;color:var(--mu2);line-height:1.8">
+        Tháng 5/2026 ghi nhận kết quả tích cực: doanh thu đạt <b style="color:var(--gr)">95,7% kế hoạch</b>, lợi nhuận ròng <b style="color:var(--gr)">vượt 5,6%</b>, dòng tiền tự do +5,2 tỷ (tốt nhất 8 tháng). Tuy nhiên hệ thống phát hiện <b style="color:var(--rd)">5 rủi ro cần hành động</b> và 3 vi phạm kiểm soát nội bộ. Mối lo ngại lớn nhất là <b style="color:var(--or)">tháng 8/2026</b> khi khoản vay 3,2 tỷ đến hạn trùng với cao điểm chi phí — số dư tiền có thể xuống còn 4,1 tỷ, gần ngưỡng nguy hiểm 5 tỷ.
+      </div>
+    </div>
+    <div style="text-align:center;flex-shrink:0;background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:8px 12px">
+      <div style="font-size:11px;color:var(--mu);margin-bottom:4px">Phân tích lúc</div>
+      <div style="font-size:11px;color:var(--bl)" id="ai-time">--:--</div>
+      <hr class="dv" style="margin:6px 0">
+      <div style="font-size:11px;color:var(--mu)">Độ tin cậy</div>
+      <div style="font-size:18px;font-weight:900;color:var(--gr)">94%</div>
+    </div>
+  </div>
+
+  <div class="r c2">
+    <div>
+      <div class="sl">🚨 Top 5 Rủi ro hôm nay — Nguyên nhân & Khuyến nghị</div>
+      <div class="risk-item risk-critical">
+        <div class="risk-hd"><div class="risk-title">1. Công nợ ABC Trading quá hạn 67 ngày — 850 tr</div><div class="risk-sev">NGHIÊM TRỌNG</div></div>
+        <div class="risk-body"><b>Nguyên nhân:</b> KH có dấu hiệu khó khăn tài chính, trì hoãn thanh toán 3 lần liên tiếp. Rủi ro mất nợ tăng theo hàm mũ sau 90 ngày.<br><b>Mức độ:</b> Có thể mất 850 tr nếu không hành động trong 48h.<br></div>
+        <div class="risk-action">💡 Khuyến nghị: Gọi điện hôm nay. Yêu cầu kế hoạch trả nợ bằng văn bản. Cân nhắc tạm dừng cung cấp và tư vấn pháp lý.</div>
+      </div>
+      <div class="risk-item risk-critical">
+        <div class="risk-hd"><div class="risk-title">2. Vật tư SX NL-012 — Tồn còn 3 ngày sản xuất</div><div class="risk-sev">NGHIÊM TRỌNG</div></div>
+        <div class="risk-body"><b>Nguyên nhân:</b> Dự báo tiêu thụ tăng nhưng không điều chỉnh mức tồn tối thiểu. Nhà cung cấp có lead time 5-7 ngày.<br><b>Mức độ:</b> Dừng sản xuất từ 01/06, ảnh hưởng DT dự kiến 2-3 tỷ/tuần.</div>
+        <div class="risk-action">💡 Khuyến nghị: Đặt mua khẩn cấp hôm nay. Liên hệ NCC dự phòng nếu NCC chính không đáp ứng.</div>
+      </div>
+      <div class="risk-item risk-high">
+        <div class="risk-hd"><div class="risk-title">3. Rủi ro thiếu tiền tháng 8 — Trả nợ NH 3,2 tỷ</div><div class="risk-sev">CAO</div></div>
+        <div class="risk-body"><b>Nguyên nhân:</b> Khoản vay VCB 3,2 tỷ đến hạn tháng 8 trùng với cao điểm chi phí và doanh thu thường thấp hơn.<br><b>Mức độ:</b> Số dư tiền dự báo còn 4,1 tỷ, tiệm cận ngưỡng nguy hiểm 5 tỷ.</div>
+        <div class="risk-action">💡 Khuyến nghị: Thu hồi ABC/XYZ (1,47 tỷ) trước T7. Hoặc đàm phán gia hạn thêm 1 tháng với VCB.</div>
+      </div>
+      <div class="risk-item risk-high">
+        <div class="risk-hd"><div class="risk-title">4. Vốn chôn tồn kho SP-A & SP-B — 1,8 tỷ</div><div class="risk-sev">CAO</div></div>
+        <div class="risk-body"><b>Nguyên nhân:</b> Dự báo bán hàng quá cao, nhập dư 280-317% mức tối ưu. Hàng tồn >162 ngày có nguy cơ lỗi thời.<br><b>Mức độ:</b> 1,8 tỷ vốn lưu động bị đọng, ảnh hưởng CCC tăng từ 38 lên 41 ngày.</div>
+        <div class="risk-action">💡 Khuyến nghị: Chương trình giảm giá 15% cho SP-A, SP-B. Ước thu hồi 1,4 tỷ trong T6.</div>
+      </div>
+      <div class="risk-item risk-medium">
+        <div class="risk-hd"><div class="risk-title">5. VAT đầu vào tăng 23% — 2 hóa đơn nghi vấn</div><div class="risk-sev">TRUNG BÌNH</div></div>
+        <div class="risk-body"><b>Nguyên nhân:</b> NCC JKL Corp có mã số thuế bất thường. NCC GHI áp sai thuế suất 10% thay vì 5%.<br><b>Mức độ:</b> Rủi ro bị truy thu thuế nếu hạch toán sai + rủi ro hóa đơn giả.</div>
+        <div class="risk-action">💡 Khuyến nghị: Xác minh MST NCC JKL trên cổng TCT. Yêu cầu NCC GHI xuất lại hóa đơn đúng thuế suất.</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="sl">✅ Tín hiệu tích cực & Cơ hội</div>
+      <div class="risk-item risk-low">
+        <div class="risk-hd"><div class="risk-title">Biên LN gộp đạt 38,2% — Cải thiện 2,1pp</div><div class="risk-sev">TỐT</div></div>
+        <div class="risk-body"><b>Nguyên nhân:</b> Đàm phán lại thành công 3 hợp đồng NCC lớn, giảm giá vốn bình quân 3,2%. Quy trình sản xuất tối ưu hơn.<br><b>Khuyến nghị:</b> Duy trì chính sách mua hàng hiện tại. Review lại các NCC còn lại trong Q3.</div>
+      </div>
+      <div class="risk-item risk-low">
+        <div class="risk-hd"><div class="risk-title">Free Cash Flow +5,2 tỷ — Tốt nhất 8 tháng</div><div class="risk-sev">TỐT</div></div>
+        <div class="risk-body"><b>Nguyên nhân:</b> Thu hồi công nợ tốt hơn (DSO giảm 3 ngày), và kiểm soát chi phí vốn hiệu quả.<br><b>Cơ hội:</b> Dùng FCF để trả trước một phần khoản vay T8, giảm áp lực thanh khoản.</div>
+      </div>
+      <div class="risk-item risk-low">
+        <div class="risk-hd"><div class="risk-title">Cơ hội: Chiết khấu TT sớm — Tiết kiệm 240 tr/năm</div><div class="risk-sev">CƠ HỘI</div></div>
+        <div class="risk-body"><b>Phân tích:</b> 3 NCC (ABC, XYZ, DEF) có điều khoản 2/10 net 30. Thanh toán trong 10 ngày tiết kiệm 2% = 240 tr/năm. ROI: 28,8% annualized.<br><b>Khuyến nghị:</b> Trình BGĐ phê duyệt chính sách TT sớm với nhóm NCC này.</div>
+      </div>
+      <hr class="dv">
+      <div class="sl" style="margin-bottom:8px">📊 Biểu đồ tổng hợp</div>
+      <div class="card">
+        <div class="hd"><div class="ct">Cash Conversion Cycle — Xu hướng 12 tháng</div><div class="cb">Ngày</div></div>
+        <div class="chs h180"><canvas id="c8_ccc"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">KTT Finance Control Tower — Kế Toán Trưởng · 9 Modules · Dữ liệu mẫu · Kết nối Misa API để cập nhật thật</div>
+
+<script>
+// Clock & AI time
+(function t(){
+  const s=new Date().toLocaleTimeString('vi-VN');
+  document.getElementById('clk').textContent=s;
+  document.getElementById('ai-time').textContent=s;
+  setTimeout(t,1000);
+})();
+
+// Tab navigation
+function go(idx,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('p'+idx).classList.add('active');
+  el.classList.add('active');
+  if(!window['ci'+idx]){window['ci'+idx]=true;renderChart(idx);}
+}
+
+// Alert time
+document.getElementById('alert-time').textContent=new Date().toLocaleTimeString('vi-VN');
+
+Chart.defaults.color='#566070';
+Chart.defaults.borderColor='#1c2538';
+const M6=['T12/25','T1/26','T2/26','T3/26','T4/26','T5/26'];
+const M12=['T6/25','T7/25','T8/25','T9/25','T10/25','T11/25','T12/25','T1/26','T2/26','T3/26','T4/26','T5/26'];
+
+// Render page 0 charts on load
+window.addEventListener('load',()=>{window['ci0']=true;renderChart(0);});
+
+function renderChart(idx){
+  if(idx===0){
+    new Chart(document.getElementById('c0_trend'),{type:'line',
+      data:{labels:M6,datasets:[
+        {label:'Tiền NH(tỷ)',data:[10.2,8.8,9.4,10.8,11.5,12.4],borderColor:'#4a9eff',borderWidth:2,pointRadius:3,tension:.4,fill:false},
+        {label:'Phải thu(tỷ)',data:[16.5,17.2,15.8,17.8,16.9,18.1],borderColor:'#ff4757',borderWidth:2,pointRadius:3,tension:.4,fill:false},
+        {label:'Tồn kho(tỷ)',data:[7.8,7.5,7.9,8.0,7.9,8.4],borderColor:'#a78bfa',borderWidth:2,pointRadius:3,tension:.4,fill:false},
+        {label:'LN ròng(tỷ)',data:[7.5,6.0,7.0,7.5,8.5,9.5],borderColor:'#00c875',borderWidth:2,pointRadius:3,tension:.4,fill:false}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{labels:{boxWidth:9,font:{size:9},padding:6}}},
+        scales:{x:{grid:{color:'#131c28'},ticks:{font:{size:8}}},y:{grid:{color:'#131c28'},ticks:{callback:v=>v+'tỷ',font:{size:9}}}}}
+    });
+  }
+  if(idx===1){
+    new Chart(document.getElementById('c1_closing'),{type:'bar',
+      data:{labels:['T12/25','T1/26','T2/26','T3/26','T4/26','T5/26'],
+        datasets:[{label:'% Hoàn thành',data:[100,100,100,100,100,68],
+          backgroundColor:['rgba(0,200,117,.7)','rgba(0,200,117,.7)','rgba(0,200,117,.7)','rgba(0,200,117,.7)','rgba(0,200,117,.7)','rgba(255,179,0,.7)'],
+          borderRadius:4}]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false}},
+        scales:{x:{grid:{color:'#131c28'},ticks:{font:{size:9}}},
+          y:{grid:{color:'#131c28'},min:0,max:100,ticks:{callback:v=>v+'%',font:{size:9}}}}}
+    });
+  }
+  if(idx===2){
+    new Chart(document.getElementById('c2_vat'),{type:'bar',
+      data:{labels:M6,datasets:[
+        {label:'VAT đầu vào',data:[180,185,178,192,195,241],backgroundColor:'rgba(0,200,117,.65)',borderRadius:3,barPercentage:.7},
+        {label:'VAT đầu ra',data:[2200,2100,2300,2450,2560,2870],backgroundColor:'rgba(74,158,255,.65)',borderRadius:3,barPercentage:.7},
+        {label:'VAT phải nộp',type:'line',data:[320,315,322,358,365,486],borderColor:'#ffb300',borderWidth:2,pointRadius:3,tension:.4,fill:false}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{labels:{boxWidth:9,font:{size:9},padding:6}}},
+        scales:{x:{grid:{color:'#131c28'},ticks:{font:{size:9}}},y:{grid:{color:'#131c28'},ticks:{callback:v=>v+' tr',font:{size:9}}}}}
+    });
+    new Chart(document.getElementById('c2_vat_ncc'),{type:'doughnut',
+      data:{labels:['NCC ABC','NCC XYZ','NCC DEF','NCC GHI','NCC JKL','Khác'],
+        datasets:[{data:[58,42,35,28,21,57],
+          backgroundColor:['#4a9eff','#00c875','#ffb300','#a78bfa','#ff4757','#3a4560'],
+          borderWidth:2,borderColor:'#0d1117'}]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:'60%',
+        plugins:{legend:{position:'right',labels:{boxWidth:10,font:{size:10},padding:8}},
+          tooltip:{callbacks:{label:c=>c.label+': '+c.raw+' tr'}}}}
+    });
+  }
+  if(idx===3){
+    new Chart(document.getElementById('c3_ar_aging'),{type:'bar',
+      data:{labels:['T1','T2','T3','T4','T5'],datasets:[
+        {label:'<30 ngày',data:[13.5,14.8,13.2,15.6,15.92],backgroundColor:'rgba(0,200,117,.65)',borderRadius:3,stack:'a'},
+        {label:'30-60 ngày',data:[1.2,1.5,.9,1.1,.71],backgroundColor:'rgba(255,179,0,.7)',borderRadius:3,stack:'a'},
+        {label:'60-90 ngày',data:[.5,.8,1.0,1.8,1.47],backgroundColor:'rgba(255,71,87,.75)',borderRadius:3,stack:'a'}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{labels:{boxWidth:9,font:{size:9},padding:5}}},
+        scales:{x:{grid:{color:'#131c28'},stacked:true,ticks:{font:{size:9}}},y:{grid:{color:'#131c28'},stacked:true,ticks:{callback:v=>v+'tỷ',font:{size:9}}}}}
+    });
+    new Chart(document.getElementById('c3_ar_trend'),{type:'line',
+      data:{labels:['T1','T2','T3','T4','T5'],datasets:[
+        {label:'Phải thu',data:[15.2,16.8,14.9,16.9,18.1],borderColor:'#ff4757',borderWidth:2,pointRadius:3,tension:.4,fill:false},
+        {label:'Quá hạn',data:[2.1,2.8,1.9,1.9,2.18],borderColor:'#ffb300',borderWidth:2,pointRadius:3,tension:.4,fill:false,borderDash:[4,3]},
+        {label:'Thu hồi',data:[3.5,4.0,3.8,4.5,4.2],borderColor:'#00c875',borderWidth:2,pointRadius:3,tension:.4,fill:false}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{labels:{boxWidth:9,font:{size:9},padding:5}}},
+        scales:{x:{grid:{color:'#131c28'},ticks:{font:{size:9}}},y:{grid:{color:'#131c28'},ticks:{callback:v=>v+'tỷ',font:{size:9}}}}}
+    });
+  }
+  if(idx===4){
+    new Chart(document.getElementById('c4_ap'),{type:'bar',
+      data:{labels:['Tuần 1/T6','Tuần 2/T6','Tuần 3/T6','Tuần 4/T6','Tuần 1/T7'],
+        datasets:[{label:'Phải thanh toán',data:[1.58,0.65,0.42,0.18,0.68],
+          backgroundColor:['rgba(255,71,87,.8)','rgba(255,71,87,.7)','rgba(255,179,0,.7)','rgba(74,158,255,.6)','rgba(74,158,255,.6)'],
+          borderRadius:4}]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false}},
+        scales:{x:{grid:{color:'#131c28'},ticks:{font:{size:9}}},y:{grid:{color:'#131c28'},ticks:{callback:v=>v+'tỷ',font:{size:9}}}}}
+    });
+  }
+  if(idx===5){
+    new Chart(document.getElementById('c5_inv'),{type:'bar',
+      data:{labels:['T1','T2','T3','T4','T5'],datasets:[
+        {label:'<30 ngày',data:[4.8,5.0,4.6,5.2,5.2],backgroundColor:'rgba(0,200,117,.65)',borderRadius:3,stack:'a'},
+        {label:'30-90 ngày',data:[1.2,1.3,1.1,1.4,1.4],backgroundColor:'rgba(74,158,255,.6)',borderRadius:3,stack:'a'},
+        {label:'90-180 ngày',data:[.9,1.0,.8,1.1,1.1],backgroundColor:'rgba(255,179,0,.65)',borderRadius:3,stack:'a'},
+        {label:'>180 ngày',data:[.3,.4,.5,.6,.7],backgroundColor:'rgba(255,71,87,.75)',borderRadius:3,stack:'a'}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{labels:{boxWidth:9,font:{size:9},padding:5}}},
+        scales:{x:{grid:{color:'#131c28'},stacked:true,ticks:{font:{size:9}}},y:{grid:{color:'#131c28'},stacked:true,ticks:{callback:v=>v+'tỷ',font:{size:9}}}}}
+    });
+  }
+  if(idx===6){
+    new Chart(document.getElementById('c6_cash'),{type:'line',
+      data:{labels:M6,datasets:[{
+        label:'Số dư tiền',data:[10.2,8.8,9.4,10.8,11.5,12.4],
+        borderColor:'#4a9eff',borderWidth:2.5,pointRadius:4,tension:.4,
+        fill:true,backgroundColor:'rgba(74,158,255,.07)'}]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false}},
+        scales:{x:{grid:{color:'#131c28'},ticks:{font:{size:9}}},y:{grid:{color:'#131c28'},min:7,ticks:{callback:v=>v+'tỷ',font:{size:9}}}}}
+    });
+  }
+  if(idx===7){
+    new Chart(document.getElementById('c7_ic'),{type:'bar',
+      data:{labels:['T12/25','T1/26','T2/26','T3/26','T4/26','T5/26'],
+        datasets:[
+          {label:'Vi phạm nghiêm trọng',data:[1,0,1,0,2,3],backgroundColor:'rgba(255,71,87,.75)',borderRadius:3,stack:'a'},
+          {label:'Cảnh báo',data:[2,1,2,1,2,2],backgroundColor:'rgba(255,179,0,.7)',borderRadius:3,stack:'a'},
+          {label:'Ghi chú',data:[3,2,1,2,1,2],backgroundColor:'rgba(74,158,255,.55)',borderRadius:3,stack:'a'}
+        ]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{labels:{boxWidth:9,font:{size:9},padding:5}}},
+        scales:{x:{grid:{color:'#131c28'},stacked:true,ticks:{font:{size:9}}},y:{grid:{color:'#131c28'},stacked:true,ticks:{font:{size:9}}}}}
+    });
+  }
+  if(idx===8){
+    new Chart(document.getElementById('c8_ccc'),{type:'line',
+      data:{labels:M12,datasets:[
+        {label:'DSO',data:[32,30,31,29,30,28,28,33,31,29,29,28],borderColor:'#ff4757',borderWidth:2,pointRadius:2,tension:.4,fill:false},
+        {label:'DIO',data:[42,40,41,43,42,44,45,48,47,46,45,45],borderColor:'#a78bfa',borderWidth:2,pointRadius:2,tension:.4,fill:false},
+        {label:'DPO',data:[28,30,29,30,31,32,33,31,32,32,32,32],borderColor:'#00c875',borderWidth:2,pointRadius:2,tension:.4,fill:false,borderDash:[5,3]},
+        {label:'CCC',data:[46,40,43,42,41,40,40,50,46,43,42,41],borderColor:'#ffb300',borderWidth:2.5,pointRadius:3,tension:.4,fill:false}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{labels:{boxWidth:9,font:{size:9},padding:6}}},
+        scales:{x:{grid:{color:'#131c28'},ticks:{font:{size:8}}},y:{grid:{color:'#131c28'},ticks:{callback:v=>v+' ngày',font:{size:9}}}}}
+    });
+  }
+}
+</script>
+</body>
+</html>
